@@ -2,104 +2,463 @@
 title: "Rudin Notes"
 description: "Quantifier definitions of Rudin chapters 6-9."
 ---
+# Chapter 6
+
+#### 6.4 Theorem (Cauchy Criterion)
+
+$f \in \mathscr{R}(\alpha) \iff \forall \epsilon > 0, \exists P \in \mathcal{P}[a, b] \text{ s.t. } U(P, f, \alpha) - L(P, f, \alpha) < \epsilon$
+
+#### 6.5 Theorem (Integrability of Continuous and Monotonic Functions)
+
+(a) $f \in \mathcal{C}([a, b]) \implies f \in \mathscr{R}(\alpha)$
+
+(b) $(f \uparrow \lor f \downarrow) \land \alpha \in \mathcal{C}([a, b]) \implies f \in \mathscr{R}(\alpha)$
+
+#### 6.6 Theorem (Finitely Many Discontinuities)
+
+$\left( |f| \leq M \land |\{x : f \notin \mathcal{C}(x)\}| < \infty \land \forall x, (f \notin \mathcal{C}(x) \implies \alpha \in \mathcal{C}(x)) \right) \implies f \in \mathscr{R}(\alpha)$
+
+#### 6.7 Theorem (Composition)
+
+$\left( f \in \mathscr{R}(\alpha) \text{ on } [a, b], f([a, b]) \subset [m, M], \phi \in \mathcal{C}([m, M]) \right) \implies \phi \circ f \in \mathscr{R}(\alpha)$
+
+#### 6.8 Theorem (Properties of the Integral)
+
+(a) $f_1, f_2 \in \mathscr{R}(\alpha) \implies \int (f_1+f_2)d\alpha = \int f_1 d\alpha + \int f_2 d\alpha \land \int cf d\alpha = c \int f d\alpha$
+
+(b) $f_1 \leq f_2 \implies \int_a^b f_1 d\alpha \leq \int_a^b f_2 d\alpha$
+
+(c) $a < c < b \implies \int_a^b f d\alpha = \int_a^c f d\alpha + \int_c^b f d\alpha$
+
+#### 6.9 Theorem (Algebraic Properties)
+
+(a) $f, g \in \mathscr{R}(\alpha) \implies fg \in \mathscr{R}(\alpha)$
+
+(b) $f \in \mathscr{R}(\alpha) \implies |f| \in \mathscr{R}(\alpha) \land |\int_a^b f d\alpha| \leq \int_a^b |f| d\alpha$
+
+#### 6.10 Theorem (Integration against Unit Step)
+
+$\left( |f| \leq M, s \in (a, b), f \in \mathcal{C}(s), \alpha(x) = I(x-s) \right) \implies \int_a^b f d\alpha = f(s)$
+
+#### 6.11 Theorem (Integration against Step Function Series)
+
+$\left( \sum c_n < \infty, c_n \geq 0, \alpha(x) = \sum c_n I(x-s_n), f \in \mathcal{C}([a, b]) \right) \implies \int_a^b f d\alpha = \sum_{n=1}^\infty c_n f(s_n)$
+
+#### 6.12 Theorem (Change of Variable of Integration)
+
+$\left( f \in \mathscr{R}, \alpha' \in \mathscr{R} \right) \implies \int_a^b f d\alpha = \int_a^b f(x)\alpha'(x) dx$
+
+#### 6.13 Theorem (Change of Variable)
+
+$\left( \phi: [A, B] \xrightarrow[onto]{1-1} [a, b], \phi \uparrow, \beta = \alpha \circ \phi, g = f \circ \phi \right) \implies \int_A^B g d\beta = \int_a^b f d\alpha$
+
+#### 6.17 Theorem (Fundamental Theorem of Calculus I)
+
+$f \in \mathscr{R}, F(x) = \int_a^x f(t)dt \implies F \in \mathcal{C}([a, b]) \land (f \in \mathcal{C}(x_0) \implies F'(x_0) = f(x_0))$
+
+#### 6.19 Theorem (Fundamental Theorem of Calculus II)
+
+$\left( f \in \mathscr{R}, \exists F \text{ s.t. } F' = f \right) \implies \int_a^b f(x)dx = F(b) - F(a)$
+
+#### 6.20 Theorem (Integration by Parts)
+
+$F' = f \in \mathscr{R}, G' = g \in \mathscr{R} \implies \int_a^b Fg dx = F(b)G(b) - F(a)G(a) - \int_a^b fG dx$
+
+
 # Chapter 7
 
-## 7.1 Definition (Pointwise Convergen)
+#### 7.1 Definition (Pointwise Convergence)
+
 $\{f_n\} \to f$ pointwise on $E \iff \forall x \in E, \forall \epsilon > 0, \exists N \in \mathbb{N} \text{ s.t. } n \ge N \implies |f_n(x) - f(x)| < \epsilon$
 
-$\textbf{7.2 Definition (Convergence of Series)} \\$
+#### 7.2 Definition (Convergence of Series)
+
 $\sum f_n(x) \text{ converges on } E \iff \forall x \in E, \{s_n(x) = \sum_{i=1}^n f_i(x)\} \text{ converges pointwise on } E$
 
-$\textbf{7.7 Definition (Uniform Convergence)} \\$
+#### 7.7 Definition (Uniform Convergence)
+
 $\{f_n\} \to f$ uniformly on $E \iff \forall \epsilon > 0, \exists N \in \mathbb{N} \text{ s.t. } \forall n \ge N, \forall x \in E \implies |f_n(x) - f(x)| \le \epsilon$
 
-$\textbf{7.8 Theorem (Cauchy Criterion for Uniform Convergence)} \\$
+#### 7.8 Theorem (Cauchy Criterion for Uniform Convergence)
+
 $\{f_n\} \text{ converges uniformly on } E \iff \forall \epsilon > 0, \exists N \in \mathbb{N} \text{ s.t. } \forall m, n \ge N, \forall x \in E \implies |f_n(x) - f_m(x)| \le \epsilon$
 
-$\textbf{7.9 Theorem (Supremum Criterion)} \\$
+#### 7.9 Theorem (Supremum Criterion)
+
 Let $M_n = \sup_{x \in E} |f_n(x) - f(x)|$. Then $\{f_n\} \to f$ uniformly on $E \iff \lim_{n \to \infty} M_n = 0$
 
+#### 7.10 Theorem (Weierstrass M-test)
 
-$\textbf{7.10 Theorem (Weierstrass M-test)} \\$
 $\left( \forall n \in \mathbb{N}, \forall x \in E, |f_n(x)| \le M_n \land \sum M_n < \infty \right) \implies \sum f_n \text{ converges uniformly on } E$
 
-$\textbf{7.11 Theorem (Limit Interchange)} \\$
+#### 7.11 Theorem (Limit Interchange)
+
 $\left( f_n \xrightarrow{unif} f \land \forall n, \lim_{t \to x} f_n(t) = A_n \right) \implies \left( \exists \lim A_n = A \land \lim_{t \to x} f(t) = A \right)$
 
-$\textbf{7.12 Theorem (Uniform Convergence and Continuity)} \\$
+#### 7.12 Theorem (Uniform Convergence and Continuity)
+
 $\left( \forall n, f_n \in \mathcal{C}(E) \land f_n \xrightarrow{unif} f \text{ on } E \right) \implies f \in \mathcal{C}(E)$
 
-$\textbf{7.13 Theorem (Dini's Theorem)} \\$
+#### 7.13 Theorem (Dini's Theorem)
+
 $\left( K \text{ is compact}, f_n, f \in \mathcal{C}(K), f_n \to f \text{ pointwise}, f_n \ge f_{n+1} \right) \implies f_n \xrightarrow{unif} f$
 
-$\textbf{7.14 Definition (Supremum Norm)} \\$
+#### 7.14 Definition (Supremum Norm)
+
 $\forall f \in \mathcal{C}(X), \|f\| = \sup_{x \in X} |f(x)|$
 
+#### 7.15 Theorem (Completeness)
 
-$\textbf{7.15 Theorem (Completeness)} \\$
 $\mathcal{C}(X) \text{ is a complete metric space under the metric } d(f,g) = \|f-g\|$
 
-$\textbf{7.16 Theorem (Integration)} \\$
+#### 7.16 Theorem (Integration)
+
 $\left( f_n \in \mathcal{R}(\alpha) \text{ on } [a,b] \land f_n \xrightarrow{unif} f \right) \implies \left( f \in \mathcal{R}(\alpha) \land \int_a^b f d\alpha = \lim_{n \to \infty} \int_a^b f_n d\alpha \right)$
 
-$\textbf{7.17 Theorem (Differentiation)} \\$
+#### 7.17 Theorem (Differentiation)
+
 $\left( \forall n, f_n \text{ diff. on } [a,b], \exists x_0 \in [a,b] \text{ s.t. } \{f_n(x_0)\} \text{ conv.}, f_n' \xrightarrow{unif} g \right) \implies \left( f_n \xrightarrow{unif} f \land f' = g \right)$
 
-$\textbf{7.18 Theorem (Nowhere Differentiable Function)} \\$
+#### 7.18 Theorem (Nowhere Differentiable Function)
+
 $\exists f \in \mathcal{C}(\mathbb{R}) \text{ s.t. } \forall x \in \mathbb{R}, f'(x) \text{ does not exist}$
 
-$\textbf{7.19 Definition (Boundedness)} \\$
-$\mathcal{F} \text{ is pointwise bdd on } E \iff \forall x \in E, \exists \phi(x) < \infty \text{ s.t. } \forall f \in \mathcal{F}, |f(x)| < \phi(x)$ \\
+#### 7.19 Definition (Boundedness)
+
+$\mathcal{F} \text{ is pointwise bdd on } E \iff \forall x \in E, \exists \phi(x) < \infty \text{ s.t. } \forall f \in \mathcal{F}, |f(x)| < \phi(x)$
+
 $\mathcal{F} \text{ is uniformly bdd on } E \iff \exists M < \infty \text{ s.t. } \forall f \in \mathcal{F}, \forall x \in E, |f(x)| < M$
 
+#### 7.20 Definition (Equicontinuity)
 
-$\textbf{7.20 Definition (Equicontinuity)} \\$
 $\mathcal{F} \text{ is equicontinuous on } E \iff \forall \epsilon > 0, \exists \delta > 0 \text{ s.t. } \forall f \in \mathcal{F}, \forall x, y \in E, d(x,y) < \delta \implies |f(x) - f(y)| < \epsilon$
 
-$\textbf{7.21 Theorem} \\$
+#### 7.21 Theorem
+
 $\left( K \text{ is compact} \land f_n \to f \text{ uniformly on } K \land f_n \in \mathcal{C}(K) \right) \implies \{f_n\} \text{ is equicontinuous}$
 
-$\textbf{7.22 Theorem (Diagonal Subsequence)} \\$
+#### 7.22 Theorem (Diagonal Subsequence)
+
 $\left( E \text{ is countable} \land \{f_n\} \text{ is pointwise bdd on } E \right) \implies \exists \{f_{n_k}\} \text{ s.t. } \{f_{n_k}(x)\} \text{ conv. } \forall x \in E$
 
-$\textbf{7.23 Definition} \\$
+#### 7.23 Definition
+
 $(Formalizes equicontinuity for families of functions in a metric space context; notationally equivalent to 7.20)$
 
-$\textbf{7.24 Theorem} \\$
-$\left( K \text{ is compact}, f_n \in \mathcal{C}(K), \{f_n\} \text{ is pointwise bdd and equicontinuous} \right) \implies \{f_n\} \text{ is uniformly bdd}$
+#### 7.24 Theorem
 
-$\textbf{7.25 Theorem (Arzel\`a-Ascoli)} \\$
+$\left( K \text{ is compact}, f_n \in \mathcal{C}(K), \{f_n\} \text{ is pointwise bdd and equicontinuous} \right) \implies \{f_n\} \text{ is uniformly bdd$
+
+#### 7.25 Theorem (Arzelà-Ascoli)
+
 $\left( K \text{ is compact}, f_n \in \mathcal{C}(K), \{f_n\} \text{ is pointwise bdd and equicontinuous} \right) \implies \exists \{f_{n_k}\} \xrightarrow{unif} f$
 
-$\textbf{7.26 Theorem (Weierstrass Approximation)} \\$
+#### 7.26 Theorem (Weierstrass Approximation)
+
 $\forall f \in \mathcal{C}([a,b]), \forall \epsilon > 0, \exists P \in \mathbb{P} \text{ s.t. } \forall x \in [a,b], |f(x) - P(x)| < \epsilon$
 
-$\textbf{7.27 Lemma} \\$
-(A technical identity used for the proof of 7.26: $\int_{-1}^{1} (1-x^2)^n dx \dots$)
+#### 7.27 Lemma
 
-$\textbf{7.28 Definition (Algebra)} \\$
+A technical identity used for the proof of 7.26: $\int_{-1}^{1} (1-x^2)^n dx \dots$
+
+#### 7.28 Definition (Algebra)
+
 $\mathcal{A} \text{ is an algebra} \iff \forall f, g \in \mathcal{A}, \forall c \in \mathbb{F}, (f+g) \in \mathcal{A} \land (fg) \in \mathcal{A} \land (cf) \in \mathcal{A}$
 
-$\textbf{7.29 Definition (Uniform Closure)} \\$
+#### 7.29 Definition (Uniform Closure)
+
 $\mathcal{B} = \bar{\mathcal{A}} \iff \mathcal{B} = \{f : \exists \{f_n\} \subset \mathcal{A} \text{ s.t. } f_n \xrightarrow{unif} f \}$
 
-$\textbf{7.30 Theorem} \\$
+#### 7.30 Theorem
+
 $\mathcal{A} \text{ is an algebra} \implies \bar{\mathcal{A}} \text{ is an algebra}$
 
-$\textbf{7.31 Definition (Separation and Vanishing)} \\$
-$\mathcal{A} \text{ separates points} \iff \forall x_1 \neq x_2, \exists f \in \mathcal{A} \text{ s.t. } f(x_1) \neq f(x_2)$ \\
+#### 7.31 Definition (Separation and Vanishing)
+
+$\mathcal{A} \text{ separates points} \iff \forall x_1 \neq x_2, \exists f \in \mathcal{A} \text{ s.t. } f(x_1) \neq f(x_2)$
+
 $\mathcal{A} \text{ vanishes at no point} \iff \forall x \in K, \exists f \in \mathcal{A} \text{ s.t. } f(x) \neq 0$
 
-$\textbf{7.32 Theorem (Stone-Weierstrass - Real)} \\$
+#### 7.32 Theorem (Stone-Weierstrass - Real)
+
 $\left( K \text{ is compact}, \mathcal{A} \subset \mathcal{C}(K, \mathbb{R}), \mathcal{A} \text{ is algebra}, \mathcal{A} \text{ sep. pts}, \mathcal{A} \text{ vanishes nowhere} \right) \implies \bar{\mathcal{A}} = \mathcal{C}(K, \mathbb{R})$
 
-$\textbf{7.33 Theorem (Stone-Weierstrass - Complex)} \\$
+#### 7.33 Theorem (Stone-Weierstrass - Complex)
+
 $\left( K \text{ compact}, \mathcal{A} \subset \mathcal{C}(K, \mathbb{C}), \mathcal{A} \text{ is algebra}, \mathcal{A} \text{ sep. pts}, \mathcal{A} \text{ vanishes nowhere}, \mathcal{A} \text{ self-adjoint} \right) \implies \bar{\mathcal{A}} = \mathcal{C}(K, \mathbb{C})$
-
-
 # Chapter 8
-h
+
+#### 8.1 Theorem (Convergence of Power Series)
+
+$\forall \{c_n\}, z_0 \in \mathbb{C} : \left( \sum c_n z_0^n \text{ converges} \right) \implies \left( \forall |z| < |z_0|, \sum |c_n z^n| \text{ converges} \right)$
+
+#### 8.2 Theorem (Algebra of Power Series)
+
+$\forall f(x) = \sum a_n x^n, g(x) = \sum b_n x^n, |x| < R \implies (f+g)(x) = \sum (a_n+b_n)x^n \land (fg)(x) = \sum \left( \sum_{k=0}^n a_k b_{n-k} \right) x^n$
+
+#### 8.3 Theorem (Differentiation and Integration)
+
+$\forall f(x) = \sum c_n x^n, |x| < R \implies \exists f'(x) = \sum n c_n x^{n-1} \land \int_0^x f(t)dt = \sum \frac{c_n}{n+1} x^{n+1}$
+
+#### 8.4 Theorem (Abel's Limit Theorem)
+
+$\forall \{c_n\} \subset \mathbb{C} : \left( \sum_{n=0}^\infty c_n = s \right) \implies \lim_{x \to 1^-} \sum_{n=0}^\infty c_n x^n = s$
+
+#### 8.5 Theorem (Cauchy Product)
+
+$\forall \sum a_n = A, \sum b_n = B, \sum c_n = C \text{ where } c_n \text{ is the Cauchy product} \implies AB = C$
+
+#### 8.6 Theorem (The Exponential Function)
+
+$\exists ! E: \mathbb{C} \to \mathbb{C} : (E'(z) = E(z) \land E(0) = 1) \implies \forall z, w \in \mathbb{C}, E(z+w) = E(z)E(w)$
+
+#### 8.7 Theorem (The Trigonometric Functions)
+
+$\exists ! \pi > 0 : (\cos(\pi/2) = 0 \land \forall x \in [0, \pi/2), \cos x > 0) \implies E(2\pi i) = 1 \land E(\pi i) = -1$
+
+#### 8.8 Theorem (Fundamental Theorem of Algebra)
+
+$\forall P(z) = \sum_{k=0}^n a_k z^k, n \ge 1, a_n \neq 0 \implies \exists z \in \mathbb{C} : P(z) = 0$
+
+#### 8.9 Theorem (Orthogonality)
+
+$\forall n, m \in \mathbb{Z} : \frac{1}{2\pi} \int_{-\pi}^{\pi} e^{i(n-m)x} dx = \delta_{nm}$
+
+#### 8.10 Theorem (Density of Trigonometric Polynomials)
+
+$\forall f \in \mathcal{C}(T), \forall \epsilon > 0, \exists P \in \mathcal{P} : \|f - P\|_\infty < \epsilon$
+
+#### 8.11 Theorem (Best Approximation)
+
+$\forall f \in \mathcal{L}^2, s_n = \sum_{-n}^n c_k \phi_k \implies \int |f - s_n|^2 \le \int |f - \sum_{-n}^n \gamma_k \phi_k|^2$
+
+#### 8.12 Theorem (Bessel's Inequality)
+
+$\forall f \in \mathcal{L}^2([-\pi, \pi]) \implies \sum_{n=-\infty}^{\infty} |c_n|^2 \le \frac{1}{2\pi} \int_{-\pi}^{\pi} |f(x)|^2 dx$
+
+#### 8.13 Theorem (Riemann-Lebesgue Lemma)
+
+$\forall f \in \mathcal{L}^1 \implies \lim_{n \to \pm \infty} \frac{1}{2\pi} \int_{-\pi}^{\pi} f(x) e^{-inx} dx = 0$
+
+#### 8.14 Theorem (Pointwise Convergence of Fourier Series)
+
+$\forall x, \exists \delta, M > 0 : |f(x+t)-f(x)| \le M|t|, \forall |t| < \delta \implies \lim_{N \to \infty} S_N(f,x) = f(x)$
+
+#### 8.15 Theorem (Fejér's Theorem)
+
+$\forall f \in \mathcal{C}(T) \implies \lim_{N \to \infty} \sigma_N(f) = f \text{ uniformly}$
+
+#### 8.16 Theorem (Parseval's Identity)
+
+$\forall f \in \mathcal{L}^2 \implies \sum_{n=-\infty}^{\infty} |c_n|^2 = \frac{1}{2\pi} \int_{-\pi}^{\pi} |f(x)|^2 dx$
+
+#### 8.17 Theorem (Gamma Functional Equation)
+
+$\forall x > 0 : \Gamma(x) = \int_0^\infty t^{x-1} e^{-t} dt \implies \Gamma(x+1) = x\Gamma(x)$
+
+#### 8.18 Theorem (Gamma Factorial Relation)
+
+$\forall n \in \mathbb{Z}^+ : \Gamma(n+1) = n!$
+
+#### 8.19 Theorem (Gamma Reflection Formula)
+
+$\forall x \in (0, 1) : \Gamma(x)\Gamma(1-x) = \frac{\pi}{\sin(\pi x)}$
+
+#### 8.20 Theorem (Bohr-Mollerup Theorem)
+
+$\forall f: \mathbb{R}^+ \to \mathbb{R}^+ : (f(1)=1 \land f(x+1)=xf(x) \land \log f \text{ convex}) \implies f = \Gamma$
+
+#### 8.21 Theorem (Beta Function Identity)
+
+$\forall x, y > 0 : \int_0^1 t^{x-1}(1-t)^{y-1} dt = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)}$
+
+#### 8.22 Theorem (Stirling's Formula)
+
+$\forall x > 0 : \lim_{x \to \infty} \frac{\Gamma(x+1)}{(x/e)^x \sqrt{2\pi x}} = 1$
 
 # Chapter 9
 
-definitions
+#### 9.1 Definition — Differentiable at x
+
+$\left( E \subset \mathbb{R}^n \text{ open} \land f:E\to\mathbb{R}^m \land \exists A \in \mathcal L(\mathbb{R}^n,\mathbb{R}^m)\text{ s.t. } \lim_{h\to 0}\frac{|f(x+h)-f(x)-Ah|}{|h|}=0 \right) \iff f \text{ is differentiable at } x$
+
+#### 9.2 Definition — Derivative at x
+
+$\left( f \text{ is differentiable at } x \land A \in \mathcal L(\mathbb{R}^n,\mathbb{R}^m) \text{ satisfies } \lim_{h\to 0}\frac{|f(x+h)-f(x)-Ah|}{|h|}=0 \right) \implies A=f'(x)$
+
+#### 9.3 Definition — Differentiable on E
+
+$\left( \forall x \in E,\ f \text{ is differentiable at } x \right) \iff f \text{ is differentiable in } E$
+
+#### 9.4 Remark — Linear Approximation
+
+$\left( f \text{ differentiable at } x \right) \implies \left( f(x+h)-f(x)=f'(x)h+r(h) \land \lim_{h\to0}\frac{|r(h)|}{|h|}=0 \right)$
+
+#### 9.5 Remark — First-Order Approximation
+
+$\left( f \text{ differentiable at } x \right) \implies f(x+h)\sim f(x)+f'(x)h$
+
+#### 9.6 Definition — Gradient, Scalar-Valued Case
+
+$\left( f:E\to\mathbb{R} \text{ differentiable at } x \right) \implies f'(x)=\nabla f(x)$
+
+#### 9.7 Remark — Directional Derivative from Gradient
+
+$\left( f:E\to\mathbb{R} \text{ differentiable at } x \land h\in\mathbb{R}^n \right) \implies \nabla f(x)\cdot h \text{ is the directional derivative in direction } h$
+
+#### 9.8 Proposition — Uniqueness of Derivative
+
+$\left( f:E\to\mathbb{R}^m \text{ differentiable at } x \land A_1,A_2\in\mathcal L(\mathbb{R}^n,\mathbb{R}^m) \text{ both satisfy } \lim_{h\to0}\frac{|f(x+h)-f(x)-A_i h|}{|h|}=0 \right)$
+
+$\implies A_1=A_2$
+
+#### 9.9 Remark — Derivative of a Linear Map
+
+$\left( f(x)=Ax \text{ for some } A\in\mathcal L(\mathbb{R}^n,\mathbb{R}^m) \right) \implies \left( \forall x\in\mathbb{R}^n,\ f'(x)=A \right)$
+
+#### 9.10 Proposition — Linearity of Differentiation
+
+$\left( f,g:E\to\mathbb{R}^m \text{ differentiable at } x \land c\in\mathbb{R} \right)$
+
+$\implies \left( (f+g)'(x)=f'(x)+g'(x) \land (cf)'(x)=c\,f'(x) \right)$
+
+#### 9.11 Theorem — Chain Rule
+
+$\left( E \subset \mathbb{R}^n,\ F \subset \mathbb{R}^m \text{ open} \land f:E \to \mathbb{R}^m \text{ differentiable at } x \land f(E)\subset F \land g:F \to \mathbb{R}^k \text{ differentiable at } f(x) \right)$
+
+$\implies \varphi=g\circ f \text{ is differentiable at } x \land \varphi'(x)=g'(f(x))\,f'(x)$
+
+#### 9.12 Definition — Norm of a Linear Map
+
+$\forall A\in\mathcal L(\mathbb{R}^n,\mathbb{R}^m),\ \|A\|=\sup\{ |Ax|:|x|\le1\}$
+
+#### 9.13 Remark — Operator Norm Estimate
+
+$\forall A\in\mathcal L(\mathbb{R}^n,\mathbb{R}^m),\ \forall x\in\mathbb{R}^n,\ |Ax|\le \|A\|\,|x|$
+
+#### 9.14 Definition — Partial Derivatives
+
+$\left( f=(f_1,\dots,f_m):E\to\mathbb{R}^m \land e_j \text{ is the }j\text{-th standard basis vector} \right)$
+
+$\implies \partial_j f_i(x)=\lim_{t\to0}\frac{f_i(x+t e_j)-f_i(x)}{t}$
+
+#### 9.15 Remark — Partial Derivatives Alone Do Not Imply Differentiability
+
+$\left( \forall i,j,\ \partial_j f_i(x) \text{ exists} \right) \centernot\implies f \text{ differentiable at } x$
+
+#### 9.16 Theorem — Differentiability Implies Partial Derivatives Exist
+
+$\left( E \subset \mathbb{R}^n \text{ open} \land x \in E \land f:E \to \mathbb{R}^m \text{ differentiable at } x \right)$
+
+$\implies \left( \forall i \in \{1,\dots,m\},\ \forall j \in \{1,\dots,n\},\ \partial_j f_i(x) \text{ exists} \right)$
+
+#### 9.17 Theorem — Derivative Determines the Partial Derivatives
+
+$\left( E \subset \mathbb{R}^n \text{ open} \land x \in E \land f:E \to \mathbb{R}^m \text{ differentiable at } x \right)$
+
+$\implies \left( \forall j\in\{1,\dots,n\},\ f'(x)e_j=\sum_{i=1}^m \partial_j f_i(x)\,v_i \right)$
+
+#### 9.18 Corollary — Jacobian Matrix of f'(x)
+
+$\left( f:E\to\mathbb{R}^m \text{ differentiable at } x \right)$
+
+$\implies [f'(x)] = 
+\begin{pmatrix}
+\partial_1 f_1(x)&\cdots&\partial_n f_1(x)\\
+\vdots&\ddots&\vdots\\
+\partial_1 f_m(x)&\cdots&\partial_n f_m(x)
+\end{pmatrix}$
+
+#### 9.19 Example — Derivative Along a Curve
+
+$\left( \gamma:(a,b)\to E\subset\mathbb{R}^n \text{ differentiable} \land f:E\to\mathbb{R} \text{ differentiable} \land g(t)=f(\gamma(t)) \right)$
+
+$\implies g'(t)=\nabla f(\gamma(t))\,\gamma'(t)$
+
+#### 9.20 Theorem — Bounded Derivative Gives Lipschitz Estimate
+
+$\left( E\subset\mathbb{R}^n \text{ convex and open} \land f:E\to\mathbb{R}^m \text{ differentiable in } E \land \forall x\in E,\ \|f'(x)\|\le M \right)$
+
+$\implies \forall a,b\in E,\ |f(b)-f(a)|\le M|b-a|$
+
+#### 9.21 Corollary — Zero Derivative Implies Constant
+
+$\left( E\subset\mathbb{R}^n \text{ convex and open} \land f:E\to\mathbb{R}^m \text{ differentiable in } E \land \forall x\in E,\ f'(x)=0 \right)$
+
+$\implies f \text{ is constant}$
+
+#### 9.22 Definition — Continuously Differentiable
+
+$\left( f \text{ is differentiable in } E \land \forall x \in E,\ \forall \varepsilon > 0,\ \exists \delta > 0,\ \forall y \in E,\ |y-x|<\delta \implies \|f'(y)-f'(x)\|<\varepsilon \right) \iff f \in C^1(E)$
+
+#### 9.23 Theorem — C¹ Implies Continuous Partial Derivatives
+
+$\left( E\subset\mathbb{R}^n \text{ open} \land f:E\to\mathbb{R}^m \land f\in C^1(E) \right)$
+
+$\implies \left( \forall i\in\{1,\dots,m\},\ \forall j\in\{1,\dots,n\},\ \partial_j f_i \text{ exists and is continuous on } E \right)$
+
+#### 9.24 Definition — Contraction
+
+$\left( (X,d) \text{ metric space} \land \varphi:X\to X \land \exists C<1 \text{ s.t. } \forall x,y\in X,\ d(\varphi(x),\varphi(y))\le C\,d(x,y) \right)$
+
+$\iff \varphi \text{ is a contraction}$
+
+#### 9.25 Theorem — Contraction Mapping Principle
+
+$\left( (X,d) \text{ complete metric space} \land \varphi:X\to X \text{ contraction} \right)$
+
+$\implies \exists! x\in X \text{ such that } \varphi(x)=x$
+
+#### 9.26 Theorem — Inverse Function Theorem
+
+$\left( E\subset\mathbb{R}^n \text{ open} \land f\in C^1(E) \land a\in E \land f'(a)\in GL_n \land b=f(a) \right)$
+
+$\implies \left( \exists \text{ open nbds } U \ni a,\ V \ni b \text{ such that } f:U\to V \text{ is a bijection} \right)$
+
+$\land \left( g=f^{-1}:V\to U \implies g\in C^1(V) \right)$
+
+#### 9.27 Remark — Derivative of Local Inverse
+
+$\left( g=f^{-1} \text{ locally near } b \right) \implies g'(y)=(f'(g(y)))^{-1}$
+
+#### 9.28 Definition — General Linear Group
+
+$GL_n=\{A\in\mathcal L(\mathbb{R}^n,\mathbb{R}^n): A \text{ is invertible}\}$
+
+#### 9.29 Linear Algebra Fact — Stability of Invertibility
+
+$\left( A\in GL_n \land B\in\mathcal L(\mathbb{R}^n,\mathbb{R}^n) \land \|B-A\|<\|A^{-1}\|^{-1} \right) \implies B\in GL_n$
+
+#### 9.30 Remark — Openness of GL_n
+
+$\left( A\in GL_n \right) \implies \exists \varepsilon>0 \text{ s.t. } \|B-A\|<\varepsilon \implies B\in GL_n$
+
+#### 9.31 Remark — Continuity of Inversion
+
+$\left( A_n\to A \text{ in } GL_n \right) \implies A_n^{-1}\to A^{-1}$
+
+#### 9.32 Definition — Block Decomposition of A
+
+$\left( A\in\mathcal L(\mathbb{R}^{n+m},\mathbb{R}^n) \land (h,k)\in\mathbb{R}^n\times\mathbb{R}^m \right)$
+
+$\implies \left( A_1h=A(h,0) \land A_2k=A(0,k) \land A(h,k)=A_1h+A_2k \right)$
+
+#### 9.33 Theorem — Implicit Function Theorem
+
+$\left( E\subset\mathbb{R}^{n+m} \text{ open} \land f:E\to\mathbb{R}^n \text{ is } C^1 \land (a,b)\in E \land f(a,b)=0 \land A=f'(a,b) \land A_1\in GL_n \right)$
+
+$\implies \exists \text{ open sets } U\subset\mathbb{R}^{n+m},\ W\subset\mathbb{R}^m \text{ with } (a,b)\in U,\ b\in W \text{ such that:}$
+
+$\text{(i) } \forall y\in W,\ \exists! x\in\mathbb{R}^n \text{ with } (x,y)\in U \land f(x,y)=0$
+
+$\text{(ii) } \exists g:W\to\mathbb{R}^n \text{ of class } C^1 \text{ such that } g(b)=a \land f(g(y),y)=0 \ \forall y\in W$
+
+$\text{(iii) } g'(b)=-A_1^{-1}A_2$
+
+#### 9.34 Remark — Meaning of the Implicit Function Theorem
+
+$\left( (f'(a,b))_1=A_1 \in GL_n \right) \implies \text{ the equation } f(x,y)=0 \text{ can be solved locally for } x=g(y)$
+
+#### 9.35 Example — Linear Case of Implicit Function Theorem
+
+$\left( f(x,y)=A_1x+A_2y \land A_1\in GL_n \land f(x,y)=0 \right) \implies x=-A_1^{-1}A_2y$
