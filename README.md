@@ -14,6 +14,8 @@ yarn dev
 ```
 
 Open http://localhost:3000 with your browser to see the result.
+Published in Vercel with the following link:
+https://nialls-notes.vercel.app/docs
 
 ## Explore
 
