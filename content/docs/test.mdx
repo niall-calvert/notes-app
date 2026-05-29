@@ -1,17 +1,105 @@
 ---
-title: Components
-description: Components
+title: "Rudin Notes"
+description: "Quantifier definitions of Rudin chapters 6-9."
 ---
+# Chapter 7
 
-## Code Block
+$\textbf{7.1 Definition (Pointwise Convergence)} \\$
+$\{f_n\} \to f$ pointwise on $E \iff \forall x \in E, \forall \epsilon > 0, \exists N \in \mathbb{N} \text{ s.t. } n \ge N \implies |f_n(x) - f(x)| < \epsilon$
 
-```js
-console.log('Hello World');
-```
+$\textbf{7.2 Definition (Convergence of Series)} \\$
+$\sum f_n(x) \text{ converges on } E \iff \forall x \in E, \{s_n(x) = \sum_{i=1}^n f_i(x)\} \text{ converges pointwise on } E$
 
-## Cards
+$\textbf{7.7 Definition (Uniform Convergence)} \\$
+$\{f_n\} \to f$ uniformly on $E \iff \forall \epsilon > 0, \exists N \in \mathbb{N} \text{ s.t. } \forall n \ge N, \forall x \in E \implies |f_n(x) - f(x)| \le \epsilon$
 
-<Cards>
-  <Card title="Learn more about Next.js" href="https://nextjs.org/docs" />
-  <Card title="Learn more about Fumadocs" href="https://fumadocs.dev" />
-</Cards>
+$\textbf{7.8 Theorem (Cauchy Criterion for Uniform Convergence)} \\$
+$\{f_n\} \text{ converges uniformly on } E \iff \forall \epsilon > 0, \exists N \in \mathbb{N} \text{ s.t. } \forall m, n \ge N, \forall x \in E \implies |f_n(x) - f_m(x)| \le \epsilon$
+
+$\textbf{7.9 Theorem (Supremum Criterion)} \\$
+Let $M_n = \sup_{x \in E} |f_n(x) - f(x)|$. Then $\{f_n\} \to f$ uniformly on $E \iff \lim_{n \to \infty} M_n = 0$
+
+
+$\textbf{7.10 Theorem (Weierstrass M-test)} \\$
+$\left( \forall n \in \mathbb{N}, \forall x \in E, |f_n(x)| \le M_n \land \sum M_n < \infty \right) \implies \sum f_n \text{ converges uniformly on } E$
+
+$\textbf{7.11 Theorem (Limit Interchange)} \\$
+$\left( f_n \xrightarrow{unif} f \land \forall n, \lim_{t \to x} f_n(t) = A_n \right) \implies \left( \exists \lim A_n = A \land \lim_{t \to x} f(t) = A \right)$
+
+$\textbf{7.12 Theorem (Uniform Convergence and Continuity)} \\$
+$\left( \forall n, f_n \in \mathcal{C}(E) \land f_n \xrightarrow{unif} f \text{ on } E \right) \implies f \in \mathcal{C}(E)$
+
+$\textbf{7.13 Theorem (Dini's Theorem)} \\$
+$\left( K \text{ is compact}, f_n, f \in \mathcal{C}(K), f_n \to f \text{ pointwise}, f_n \ge f_{n+1} \right) \implies f_n \xrightarrow{unif} f$
+
+$\textbf{7.14 Definition (Supremum Norm)} \\$
+$\forall f \in \mathcal{C}(X), \|f\| = \sup_{x \in X} |f(x)|$
+
+
+$\textbf{7.15 Theorem (Completeness)} \\$
+$\mathcal{C}(X) \text{ is a complete metric space under the metric } d(f,g) = \|f-g\|$
+
+$\textbf{7.16 Theorem (Integration)} \\$
+$\left( f_n \in \mathcal{R}(\alpha) \text{ on } [a,b] \land f_n \xrightarrow{unif} f \right) \implies \left( f \in \mathcal{R}(\alpha) \land \int_a^b f d\alpha = \lim_{n \to \infty} \int_a^b f_n d\alpha \right)$
+
+$\textbf{7.17 Theorem (Differentiation)} \\$
+$\left( \forall n, f_n \text{ diff. on } [a,b], \exists x_0 \in [a,b] \text{ s.t. } \{f_n(x_0)\} \text{ conv.}, f_n' \xrightarrow{unif} g \right) \implies \left( f_n \xrightarrow{unif} f \land f' = g \right)$
+
+$\textbf{7.18 Theorem (Nowhere Differentiable Function)} \\$
+$\exists f \in \mathcal{C}(\mathbb{R}) \text{ s.t. } \forall x \in \mathbb{R}, f'(x) \text{ does not exist}$
+
+$\textbf{7.19 Definition (Boundedness)} \\$
+$\mathcal{F} \text{ is pointwise bdd on } E \iff \forall x \in E, \exists \phi(x) < \infty \text{ s.t. } \forall f \in \mathcal{F}, |f(x)| < \phi(x)$ \\
+$\mathcal{F} \text{ is uniformly bdd on } E \iff \exists M < \infty \text{ s.t. } \forall f \in \mathcal{F}, \forall x \in E, |f(x)| < M$
+
+
+$\textbf{7.20 Definition (Equicontinuity)} \\$
+$\mathcal{F} \text{ is equicontinuous on } E \iff \forall \epsilon > 0, \exists \delta > 0 \text{ s.t. } \forall f \in \mathcal{F}, \forall x, y \in E, d(x,y) < \delta \implies |f(x) - f(y)| < \epsilon$
+
+$\textbf{7.21 Theorem} \\$
+$\left( K \text{ is compact} \land f_n \to f \text{ uniformly on } K \land f_n \in \mathcal{C}(K) \right) \implies \{f_n\} \text{ is equicontinuous}$
+
+$\textbf{7.22 Theorem (Diagonal Subsequence)} \\$
+$\left( E \text{ is countable} \land \{f_n\} \text{ is pointwise bdd on } E \right) \implies \exists \{f_{n_k}\} \text{ s.t. } \{f_{n_k}(x)\} \text{ conv. } \forall x \in E$
+
+$\textbf{7.23 Definition} \\$
+$(Formalizes equicontinuity for families of functions in a metric space context; notationally equivalent to 7.20)$
+
+$\textbf{7.24 Theorem} \\$
+$\left( K \text{ is compact}, f_n \in \mathcal{C}(K), \{f_n\} \text{ is pointwise bdd and equicontinuous} \right) \implies \{f_n\} \text{ is uniformly bdd}$
+
+$\textbf{7.25 Theorem (Arzel\`a-Ascoli)} \\$
+$\left( K \text{ is compact}, f_n \in \mathcal{C}(K), \{f_n\} \text{ is pointwise bdd and equicontinuous} \right) \implies \exists \{f_{n_k}\} \xrightarrow{unif} f$
+
+$\textbf{7.26 Theorem (Weierstrass Approximation)} \\$
+$\forall f \in \mathcal{C}([a,b]), \forall \epsilon > 0, \exists P \in \mathbb{P} \text{ s.t. } \forall x \in [a,b], |f(x) - P(x)| < \epsilon$
+
+$\textbf{7.27 Lemma} \\$
+(A technical identity used for the proof of 7.26: $\int_{-1}^{1} (1-x^2)^n dx \dots$)
+
+$\textbf{7.28 Definition (Algebra)} \\$
+$\mathcal{A} \text{ is an algebra} \iff \forall f, g \in \mathcal{A}, \forall c \in \mathbb{F}, (f+g) \in \mathcal{A} \land (fg) \in \mathcal{A} \land (cf) \in \mathcal{A}$
+
+$\textbf{7.29 Definition (Uniform Closure)} \\$
+$\mathcal{B} = \bar{\mathcal{A}} \iff \mathcal{B} = \{f : \exists \{f_n\} \subset \mathcal{A} \text{ s.t. } f_n \xrightarrow{unif} f \}$
+
+$\textbf{7.30 Theorem} \\$
+$\mathcal{A} \text{ is an algebra} \implies \bar{\mathcal{A}} \text{ is an algebra}$
+
+$\textbf{7.31 Definition (Separation and Vanishing)} \\$
+$\mathcal{A} \text{ separates points} \iff \forall x_1 \neq x_2, \exists f \in \mathcal{A} \text{ s.t. } f(x_1) \neq f(x_2)$ \\
+$\mathcal{A} \text{ vanishes at no point} \iff \forall x \in K, \exists f \in \mathcal{A} \text{ s.t. } f(x) \neq 0$
+
+$\textbf{7.32 Theorem (Stone-Weierstrass - Real)} \\$
+$\left( K \text{ is compact}, \mathcal{A} \subset \mathcal{C}(K, \mathbb{R}), \mathcal{A} \text{ is algebra}, \mathcal{A} \text{ sep. pts}, \mathcal{A} \text{ vanishes nowhere} \right) \implies \bar{\mathcal{A}} = \mathcal{C}(K, \mathbb{R})$
+
+$\textbf{7.33 Theorem (Stone-Weierstrass - Complex)} \\$
+$\left( K \text{ compact}, \mathcal{A} \subset \mathcal{C}(K, \mathbb{C}), \mathcal{A} \text{ is algebra}, \mathcal{A} \text{ sep. pts}, \mathcal{A} \text{ vanishes nowhere}, \mathcal{A} \text{ self-adjoint} \right) \implies \bar{\mathcal{A}} = \mathcal{C}(K, \mathbb{C})$
+
+
+# Chapter 8
+h
+
+# Chapter 9
+
+definitions
