@@ -1,0 +1,1018 @@
+---
+title: Gaussian Processes
+description: MDX-safe sanitized version of the pasted content.
+---
+
+## GAUSSIAN PROCESSES
+
+The central object in optimization is an objective function $𝑓$ : $X$ → ℝ, and the primary challenge in algorithm design is inherent *uncertainty* about this function: most importantly, where is the function maximized and what is its maximal value? Prior to optimization, we may very well have no idea. Optimization affords us the opportunity to acquire information about the objective – through observations of our own design – to shed light on these questions. However, this process is itself fraught with uncertainty, as we cannot know the outcomes and implications of these observations at the time of their design. Notably, we face this uncertainty even when we have a closed-form expression for the objective function, a favorable position as many objectives act as “black boxes.”
+
+1 Reflecting on this situation, diaconis posed an intriguing question: “what does it mean to ‘know’ a function?” The answer is unclear when an analytic expression, which might at first glance seem to encapsulate the essence of the function, is insufficient to determine features of interest. However, diaconis argued that although we may not know *everything* about a function, we often have *some* prior knowledge that can facilitate a numerical procedure such as optimization. For example, we may expect an objective function to be smooth (or rough), or to assume values in a given range, or to feature a relatively simple underlying trend, or to depend on some hidden low-dimensional representation we hope to uncover.2 All of this knowledge could be instrumental in accelerating optimization if it could be systematically captured and exploited.
+
+Having identifiable information about an objective function prior to optimization motivates the Bayesian approach we will explore throughout this book. We will address uncertainty in the objective function through the unifying framework of Bayesian inference, treating $𝑓$ – as well as ancillary quantities such as $𝑥$[∗] and $𝑓$[∗] (1.1) – as random variables to be inferred from observations revealed during optimization.
+
+To pursue this approach, we must first determine how to build useful prior distributions for objective functions and how to compute a posterior belief given observations. If the system under investigation is well understood, we may be able to identify an appropriate parametric form $𝑓$ ( $𝑥$ ; $𝜽$ ) and infer the parameters $𝜽$ directly. This approach is likely the best course of action when possible;3 however, many objective functions have no obvious parametric form, and most models used in Bayesian optimization are thus nonparametric to avoid undue assumptions.4
+
+In this chapter we will introduce *Gaussian processes* (gps), a convenient class of nonparametric regression models widely used in Bayesian optimization. We will begin by defining Gaussian processes and deriving some basic properties, then demonstrate how to perform inference from observations. In the case of exact observation and additive Gaussian noise, we can perform this inference *exactly,* resulting in an updated posterior Gaussian process. We will continue by considering some theoretical properties of Gaussian processes relevant to optimization and inference with non-Gaussian observation models.
+
+2
+
+- 1 p. diaconis (1988). Bayesian Numerical Analysis. In: *Statistical Decision Theory and Related Topics iv* .
+
+- 2 We will explore all of these possibilities in the next chapter, p. 45.
+
+Bayesian inference of the objective function: § 1.2, p. 8
+
+- 3 v. dalibard et al. (2017). boat: Building AutoTuners with Structured Bayesian Optimization. *www 2017* .
+
+- 4 The term“nonparametric” is something of a misnomer. A nonparametric objective function model has parameters but their dimension is infinite – we effectively parameterize the objective by its value at every point.
+
+This material has been published by Cambridge University Press as *Bayesian Optimization.* This version is free to view and download for personal use only. Not for redistribution, resale, or use in derivative works. ©Roman Garnett 2023. https://bayesoptbook.com/
+
+15
+
+16 gaussian processes
+
+- 5 c. e. rasmussen and c. k. i. williams (2006). *Gaussian Processes for Machine Learning* . mit Press.
+
+The literature on Gaussian processes is vast, and we do not intend this chapter to serve as a standalone introduction but rather as companion to the existing literature. Although our discussion will be comprehensive, our focus on optimization will sometimes bias its scope. For a broad overview, the interested reader may consult rasmussen and williams’s classic monograph.5
+
+## 2.1 definition and basic properties
+
+multivariate normal distribution: § a.2, p. 296
+
+- Chapter 3: Modeling with Gaussian Processes, p. 45
+
+- 6 p. hennig et al. (2015). Probabilistic Numerics and Uncertainty in Computations. *Proceedings of the Royal Society A: Mathematical, Physical and Engineering Sciences* 471(2179):20150142.
+
+- 7 p. hennig et al. (2022). *Probabilistic Numerics: Computation as Machine Learning* . Cambridge University Press.
+
+- 8 If $X$ is finite, there is no distinction between a Gaussian process and a multivariate normal distribution, so only the infinite case is interesting for this discussion.
+
+- 9 b. øksendal (2013). *Stochastic Differential Equations: An Introduction with Applications* . Springer–Verlag. [§ 2.1]
+
+- 10 Writing the process as if it were a functionvalued probability density function is an abuse of notation, but a useful and harmless one.
+
+A *Gaussian process* is an extension of the familiar multivariate normal distribution suitable for modeling functions on infinite domains. Gaussian processes inherit the convenient mathematical properties of the multivariate normal distribution without sacrificing computational tractability. Further, by modifying the structure of a gp, we can model functions with a rich variety of behavior; we will explore this capability in the next chapter. This combination of mathematical elegance and flexibility in modeling has established Gaussian processes as the workhorse of Bayesian approaches to numerical tasks, including optimization.6[,] 7
+
+## Definition
+
+Consider an objective function $𝑓$ : $X$ → ℝ of interest over an arbitrary infinite domain $X$ .8 We will take a nonparametric approach and reason about the function as an infinite collection of random variables, one corresponding to the function value at every point in the domain. Mutual dependence between these random variables will then determine the statistical properties of the function’s shape.
+
+It is perhaps not immediately clear how we can specify a useful distribution over infinitely many random variables, a construction known as a *stochastic process* . However, a result known as the *Kolmogorov extension theorem* allows us to construct a stochastic process by defining only the distribution of arbitrary *finite* sets of function values, subject to natural consistency constraints.9 For a Gaussian process, these finite-dimensional distributions are all multivariate Gaussian, hence its name.
+
+In this light, we build a Gaussian process by replacing the parameters in the finite-dimensional case – a mean vector and a positive semidefinite covariance matrix – by analogous *functions* over the domain. We specify a Gaussian process on $𝑓$ :10
+
+_Picture omitted (79 x 11)._
+mean function, $𝜇$ covariance function (kernel), $𝐾$ value of objective at $𝑥, 𝜙$
+
+by a $mean function 𝜇$ : $X$ → ℝ and a positive semidefinite *covariance function* (or *kernel* ) $𝐾$ : $X$ × $X$ → ℝ. The mean function determines the expected function value $𝜙$ = $𝑓$ ( $𝑥$ ) at any location $𝑥$ :
+
+_Picture omitted (67 x 11)._
+thus serving as a location parameter representing the function’s central tendency. The covariance function determines how deviations from the
+
+2.1. definition and basic properties 17
+
+mean are structured, encoding expected properties of the function’s behavior. Defining $𝜙$[′] = $𝑓$ ( $𝑥$[′] ), we have:
+
+value of objective at $𝑥,$[′] $𝜙$[′]
+
+_Picture omitted (201 x 11)._
+The mean and covariance functions of the process allow us to compute any finite-dimensional marginal distribution on demand. Let x ⊂ $X$ be finite and let $𝝓$ = $𝑓$ (x) be the corresponding function values, a vectorvalued random variable. For the Gaussian process (2.1), the distribution of $𝝓$ is multivariate normal with parameters determined by the mean and covariance functions:
+
+values of objective at x, $𝝓$ = $𝑓$ (x)
+
+_Picture omitted (190 x 11)._
+where
+
+_Picture omitted (248 x 10)._
+Here $𝐾$ (x *,* x) is the matrix formed by evaluating the covariance function for each pair of points: Σ $𝑖𝑗$ = $𝐾$ ( $𝑥𝑖,𝑥 𝑗$ ), also called the *Gram matrix* of x.
+
+In many ways, Gaussian processes behave like “really big” Gaussian distributions, and one can intuit many of their properties from this heuristic alone. For example, the Gaussian marginal property in (2.2– 2.3) corresponds precisely with the analogous formula in the finitedimensional case (a.13). Further, this property automatically ensures global consistency in the following sense.11 If x is an arbitrary set of points and x[′] ⊃ x is a superset, then we arrive at the same belief about $𝝓$ whether we compute it directly from (2.2–2.3) or indirectly by first computing $𝑝$ ( $𝝓$[′] | x[′] ) then marginalizing $𝝓$[′] \ $𝝓$ (a.13).
+
+## Gram matrix of x, **𝚺** = $𝐾$ (x *,* x)
+
+- 11 In fact, this is precisely the consistency required by the Kolmogorov extension theorem mentioned on the facing page.
+
+marginalizing multivariate normal distributions, § a.2, p. 299
+
+## Example and basic properties
+
+Let us construct and explore an explicit Gaussian process for a function on the interval $X$ = [0 *,* 30]. For the mean function we take the zero function $𝜇$ ≡ 0, indicating a constant central tendency. For the covariance function, we take the prototypical *squared exponential* covariance:
+
+squared exponential covariance: § 3.3, p. 51
+
+_Picture omitted (202 x 13)._
+Let us pause to consider the implications of this choice. First, note that var[ $𝜙$ | $𝑥$ ] = $𝐾$ ( $𝑥,𝑥$ ) = 1 at every point $𝑥$ ∈ $X$ , and thus the covariance function (2.4) also measures the *correlation* between the function values $𝜙$ and $𝜙$ .[′] This correlation decreases with the distance between $𝑥$ and $𝑥,$[′] falling from unity to zero as these points become increasingly separated; see the illustration in the margin. We can loosely interpret this as a statistical consequence of continuity: function values at nearby locations are highly correlated, whereas function values at distant locations are effectively independent. This assumption also implies that observing the function at some point $𝑥$ provides nontrivial information about the function at sufficiently nearby locations (roughly when | $𝑥$ − $𝑥$[′] | *&lt;* 3). We will explore this implication further shortly.
+
+_Picture omitted (144 x 98)._
+_Start of picture text:_
+𝐾 ( 𝑥,𝑥 [′] )  1  | 𝑥 − 𝑥 [′] |  0  0 3  **----- End of picture text -----**  
+
+
+The squared exponential covariance (2.4) as a function of the distance between inputs.
+
+18 gaussian processes
+
+prior mean prior 95% credible interval samples
+
+_Picture omitted (465 x 49)._
+Figure 2.1: Our example Gaussian process on the domain $X$ = [0 *,* 30]. We illustrate the marginal belief at every location with its mean and a 95% credible interval and also show three example functions sampled from the process.
+
+predictive credible intervals For a Gaussian process, the marginal distribution of any *single* function value is univariate normal (2.2):
+
+_Picture omitted (267 x 12)._
+where we have abused notation slightly by overloading the symbol $𝜇$ . This allows us to derive pointwise credible intervals; for example, the familiar $𝜇$ ± 1 *.* 96 $𝜎$ is a 95% credible interval for $𝜙$ . Examining our example gp, the marginal distribution of every function value is in fact *standard* normal. We provide a rough visual summary of the process via its mean function and pointwise 95% predictive credible intervals in Figure 2.1. There is nothing terribly exciting we can glean from these marginal distributions alone, and no interesting structure in the process is yet apparent.
+
+## Sampling
+
+sampling from a multivariate normal distribution: § a.2, p. 299
+
+We may gain more insight by inspecting samples drawn from our example process reflecting the *joint* distribution of function values. Although it is impossible to represent an arbitrary function on $X$ in finite memory, we can approximate the sampling process by taking a dense grid x ⊂ $X$ and sampling the corresponding function values from their joint multivariate normal distribution (2.2). Plotting the sampled vectors against the chosen grid reveals curves approximating draws from the Gaussian process. Figure 2.1 illustrates this procedure for our example using a grid of 1000 equally spaced points. Each sample is smooth and has several local optima distributed throughout the domain – for some applications, this might be a reasonable model for an objective function on *X.*
+
+## 2.2 inference with exact and noisy observations
+
+We now turn to our attention to *inference* : given a Gaussian process prior on an objective function, how can we condition this initial belief on observations obtained during optimization?
+
+example and discussion
+
+Let us look at an example to build intuition before diving into the details. Figure 2.2 shows the effect of conditioning our example gp from
+
+2.2. inference with exact and noisy observations 19
+
+_Picture omitted (465 x 94)._
+_Start of picture text:_
+observations posterior mean posterior 95% credible interval samples  **----- End of picture text -----**  
+
+
+Figure 2.2: The posterior for our example scenario in Figure 2.1 conditioned on three exact observations.
+
+the previous section on three exact measurements of the function. The updated belief reflects both our prior assumptions and the information contained in the data, the hallmark of Bayesian inference. To elaborate, the posterior mean smoothly interpolates through the observed values, agreeing with both the measured values and the smoothness encoded in the prior covariance function. The posterior credible intervals are reduced in the neighborhood of the measured locations – where the prior covariance function encodes nontrivial dependence on at least one observed value – and vanish where the function value has been exactly determined. On the other hand, our marginal belief remains effectively unchanged from the prior in regions sufficiently isolated from the data, where the prior covariance function encodes effectively no correlation.
+
+Conveniently, inference is straightforward for the pervasive observation models of exact measurement and additive Gaussian noise, where the self-conjugacy of the normal distribution yields a *Gaussian process* posterior with updated parameters we can compute in closed form. The reasoning underlying inference for both observation models is identical and is subsumed by a flexible general argument we will present first.
+
+*Inference from arbitrary jointly Gaussian observations*
+
+We may exactly condition a Gaussian process $𝑝$ ( $𝑓$ ) = $GP$ ( $𝑓$ ; $𝜇, 𝐾$ ) on the observation of *any* vector y sharing a joint Gaussian distribution with $𝑓$ :
+
+vector of observed values, y
+
+_Picture omitted (218 x 31)._
+This notation, analogous to (a.12), extends the Gaussian process on $𝑓$ to include the entries of y; that is, we assume the distribution of any finite subset of function and/or observed values is multivariate normal. We specify the joint distribution via the marginal distribution of y:12
+
+- 12 We assume C is positive definite; if it were only positive *semi* definite, there would be wasteful linear dependence among observations.
+
+observation mean and covariance, m, C
+
+_Picture omitted (182 x 11)._
+and the cross-covariance function between y and $𝑓$ :
+
+cross-covariance between observations and function values, *𝜅*
+
+_Picture omitted (187 x 10)._
+20 gaussian processes
+
+Although it may seem absurd that we could identify and observe a vector satisfying such strong restrictions on its distribution, we can already deduce several examples from first principles, including:
+
+inference from exact observations: § 2.2, p. 22 affine transformations: § a.2, p. 298 derivatives and expectations: § 2.6, p. 30
+
+conditioning a multivariate normal distribution: § a.2, p. 299
+
+- any vector of function values (2.2),
+
+- any affine transformation of function values (a.10), and
+
+- limits of such quantities, such as partial derivatives or expectations.
+
+Further, we may condition on any of the above even if corrupted by independent additive Gaussian noise, as we will shortly demonstrate. We may condition the joint distribution (2.6) on y analogously to the finite-dimensional case (a.14), resulting in a Gaussian process posterior on $𝑓$ . Writing $D$ = y for the observed data, we have:
+
+_Picture omitted (200 x 10)._
+posterior mean and covariance, $𝜇D$ , $𝐾D$
+
+where
+
+_Picture omitted (224 x 27)._
+- 13 This is a useful exercise! The result will be a stochastic process with multivariate normal finite-dimensional distributions, a Gaussian process by definition (2.5).
+
+This can be verified by computing the joint distribution of an arbitrary 13 finite set of function values and y and conditioning on the latter (a.14). The above result provides a simple procedure for gp posterior inference from any vector of observations satisfying (2.6):
+
+1. compute the marginal distribution of y (2.7),
+
+2. derive the cross-covariance function *𝜅* (2.8), and
+
+3. find the posterior distribution of $𝑓$ via (2.9–2.10).
+
+We will realize this procedure for several special cases below. However, we will first demonstrate how we may seamlessly handle measurements corrupted by additive Gaussian noise and build intuition for the posterior distribution by dissecting its moments in terms of the statistics of the observations and the correlation structure of the prior.
+
+## Corruption by additive Gaussian noise
+
+We pause to make one observation of immense practical importance: any vector satisfying (2.6) would continue to suffice even if corrupted by independent additive Gaussian noise, and thus we can use the above result to condition a Gaussian process on *noisy* observations as well.
+
+noisy observation of y, z vector of random errors, $𝜺$ noise covariance matrix, N
+
+Suppose that rather than observing y exactly, our measurement mechanism only allowed observing z = y + $𝜺$ instead, where $𝜺$ is a vector of random errors independent of y. If the errors are normally distributed with mean zero and known (arbitrary) covariance N:
+
+_Picture omitted (190 x 11)._
+sums of normal vectors: § a.2, p. 300
+
+then we have
+
+_Picture omitted (275 x 11)._
+2.2. inference with exact and noisy observations 21
+
+Thus we can condition on an observation of the corrupted vector z by simply replacing C with C + N in the prior (2.6) and posterior (2.10).14 Note that the posterior converges to that from a direct observation of y if we take the noise covariance N → 0 in the positive semidefinite cone, a reassuring result.
+
+- 14 Assuming zero-mean errors is not strictly necessary but is overwhelmingly common in practice. A nonzero mean 𝔼[ $𝜺$ ] = n is possible by further replacing (y − $𝝁$ ) with[] y −[ $𝝁$ + n][] in (2.10), where $𝝁$ + n = 𝔼[y].
+
+## Interpretation of posterior moments
+
+The moments of the posterior Gaussian process (2.10) contain update terms adjusting the prior moments in light of the data. These updates have intuitive interpretations in terms of the nature of the prior process and the observed values, which we may unravel with some care.
+
+We can gain some initial insight by considering the case where we observe a *single* value with $𝑦$ distribution $N$ ( $𝑦$ ; $𝑚,𝑠$[2] ) and breaking down its impact on our belief. Consider an arbitrary function value $𝜙$ with prior distribution $N$ ( $𝜙$ ; $𝜇, 𝜎$[2] ) (2.5) and define
+
+$𝑧$ -score of measurement $𝑦$ , $𝑧$
+
+_Picture omitted (42 x 19)._
+to be the $𝑧$ -score of the observed value $𝑦$ and
+
+_Picture omitted (103 x 22)._
+to be the correlation between $𝑦$ and $𝜙$ . Then the posterior mean and standard deviation of $𝜙$ are, respectively:
+
+correlation between measurement $𝑦$ and function value $𝜙$ , $𝜌$
+
+posterior moments of $𝜙$ from a scalar observation
+
+_Picture omitted (192 x 20)._
+The $𝑧$ -score of the posterior mean, with respect to the prior distribution of $𝜙$ , is $𝜌𝑧$ . An independent measurement with $𝜌$ = 0 thus leaves the prior mean unchanged, whereas a perfectly dependent measurement with | $𝜌$ | = 1 shifts the mean up or down by $𝑧$ standard deviations (depending on the sign of the correlation) to match the magnitude of the measurement’s $𝑧$ -score. Measurements with partial dependence result in outcomes between these extremes. Further, *surprising* measurements – that is, those with large | $𝑧$ | – yield larger shifts in the mean, whereas an entirely expected measurement with $𝑦$ = $𝑚$ leaves the mean unchanged.
+
+Turning to the posterior standard deviation, the measurement reduces our uncertainty in $𝜙$ by a factor depending on the correlation $𝜌$ , but *not* on the value observed. An independent measurement again leaves the prior intact, whereas a perfectly dependent measurement collapses the posterior standard deviation to zero as the value of $𝜙$ would be completely determined. The relative reduction in posterior uncertainty as a function of the absolute correlation is illustrated in the margin.
+
+In the case of vector-valued observations, we can interpret similar structure in the posterior, although dependence between entries of y must also be accounted for. We may factor the observation covariance matrix as
+
+interpretation of moments
+
+_Picture omitted (104 x 104)._
+_Start of picture text:_
+𝜎 √ 1 − 𝜌 [2]  𝜎  | 𝜌 |  0  0 1  **----- End of picture text -----**  
+
+
+The posterior standard deviation of $𝜙$ as a function of the strength of relationship with $𝑦$ , | $𝜌$ |.
+
+_Picture omitted (163 x 10)._
+22 gaussian processes
+
+where S is diagonal with $𝑆𝑖𝑖$ =[√] $𝐶𝑖𝑖$ = std[ $𝑦𝑖$ ] and P = corr[y] is the observation correlation matrix. We may then rewrite the posterior mean of $𝜙$ as
+
+_Picture omitted (53 x 12)._
+where z and *𝝆* represent the vectors of measurement $𝑧$ -scores and the cross-correlation between $𝜙$ and y, respectively:
+
+_Picture omitted (130 x 23)._
+- 15 It can be instructive to contrast the behavior of the posterior when conditioning on two highly correlated values versus two independent ones. In the former case, the posterior does not change much as a result of the second measurement, as dependence reduces the effective number of measurements.
+
+- 16 P is congruent to C (2.13) and is thus positive definite from Sylvester’s law of inertia.
+
+- 17 For positive semidefinite A, B, |A| ≤|A + B |.
+
+The posterior mean is now in the same form as the scalar case (2.12), with the introduction of the observation correlation matrix moderating the $𝑧$ -scores to account for dependence between the observed values.15
+
+The posterior standard deviation of $𝜙$ in the vector-valued case is
+
+_Picture omitted (63 x 19)._
+again analogous to (2.12). Noting that the inverse correlation matrix P[−][1] is positive definite,16 the posterior covariance again reflects a global reduction in the marginal uncertainty of every function value. In fact, the *joint* distribution of any set of function values has reduced uncertainty in the posterior in terms of the differential entropy (a.16), as17
+
+## | $𝐾$ (x *,* x) − *𝜅* (x)[⊤] C[−][1] *𝜅* (x)| ≤| $𝐾$ (x *,* x)| *.*
+
+- 18 The Löwner order is the partial order induced by the convex cone of positive-semidefinite matrices. For symmetric A *,* B, we define A ≺ B if and only if B − A is positive definite:
+
+   - k. löwner (1934). Über monotone Matrixfunktionen. *Mathematische Zeitschrift* 38:177–216.
+
+The reduction of uncertainty again depends on the strength of dependence between function values and the observed data, with independence ( *𝝆* = 0) resulting in no change. The reduction also depends on the precision of the measurements: all other things held equal, observations with greater precision in terms of the Löwner order18 on the precision matrix C[−][1] provide a globally better informed posterior. In particular, as (C + N)[−][1] ≺ C[−][1] for any noise covariance N, noisy measurements (2.11) categorically provide *less* information about the function than direct observations, as one should hope.
+
+## Inference with exact function evaluations
+
+We will now explicitly demonstrate the general process of Gaussian process inference for important special cases, beginning with the simplest possible observation mechanism: exact observation.
+
+- observed data, $D$ = (x $, 𝝓$ )
+
+Suppose we have observed $𝑓$ at some set of locations x, revealing the corresponding function values $𝝓$ = $𝑓$ (x), and let $D$ = (x $, 𝝓$ ) denote this dataset. The observed vector shares a joint Gaussian distribution with any other set of function values by the gp assumption on $𝑓$ (2.2), so we may follow the above procedure to derive the posterior. The marginal distribution of $𝝓$ is Gaussian (2.3):
+
+_Picture omitted (92 x 11)._
+2.2. inference with exact and noisy observations 23
+
+and the cross-covariance between an arbitrary function value and $𝝓$ is by definition given by the covariance function:
+
+_Picture omitted (135 x 10)._
+Appealing to (2.9–2.10) we have:
+
+_Picture omitted (111 x 11)._
+where
+
+_Picture omitted (231 x 28)._
+Our previous Figure 2.2 illustrates the posterior resulting from conditioning our gp prior in Figure 2.1 on three exact measurements, with high-level analysis of its behavior in the accompanying text.
+
+example and discussion
+
+## Inference with function evaluations corrupted by additive Gaussian noise
+
+With the notable exception of optimizing the output of a deterministic computer program or simulation, observations of an objective function are typically corrupted by noise due to measurement limitations or statistical approximation; we must be able to handle such noisy observations to maximize utility. Fortunately, in the important case of additive Gaussian noise, we may perform exact inference following the general procedure described above. In fact, the derivation below follows directly from our previous discussion on arbitrary additive Gaussian noise, but the case of additive Gaussian noise in function evaluations is important enough to merit its own discussion.
+
+Suppose we make observations of $𝑓$ at locations x, revealing corrupted values y = $𝝓$ + $𝜺.$ Suppose the measurement errors $𝜺$ are independent of $𝝓$ and normally distributed with mean zero and covariance N, which may optionally depend on x:
+
+_Picture omitted (194 x 11)._
+arbitrary additive Gaussian noise: § 2.2, p. 20
+
+- 19 Allowing nondiagonal N departs from our typical convention of assuming conditional independence between observations (1.3), but doing so does not complicate inference, so there is no harm in this generality.
+
+As before we aggregate the observations into a dataset $D$ = (x *,* y).
+
+The observation noise covariance can in principle be arbitrary;19 however, the most common models in practice are independent homoskedastic noise with scale $𝜎𝑛$ :
+
+special case: independent homoskedastic noise
+
+_Picture omitted (176 x 13)._
+and independent heteroskedastic noise with scale depending on location according to a function $𝜎𝑛$ : $X$ → ℝ≥0:
+
+special case: independent heteroskedastic noise
+
+_Picture omitted (176 x 12)._
+For a given observation location $𝑥$ , we will simply write $𝜎𝑛$ for the associated noise scale, leaving any dependence on $𝑥$ implicit.
+
+observation noise scale, $𝜎𝑛$
+
+24 gaussian processes
+
+_Picture omitted (465 x 94)._
+_Start of picture text:_
+observations posterior mean posterior 95% credible interval  **----- End of picture text -----**  
+
+
+_Picture omitted (465 x 169)._
+Figure 2.3: Posteriors for our example gp from Figure 2.1 conditioned on 15 noisy observations with independent homoskedastic noise (2.16). The signal-to-noise ratio is 10 for the top example, 3 for the middle example, and 1 for the bottom example.
+
+The prior distribution of the observations is now multivariate normal (2.3, a.15):
+
+_Picture omitted (204 x 11)._
+Due to independence of the noise, the cross-covariance remains the same as in the exact observation case:
+
+_Picture omitted (134 x 11)._
+Conditioning on the observed value now yields a gp posterior with
+
+_Picture omitted (244 x 27)._
+homoskedastic example and discussion
+
+Figure 2.3 shows a sequence of posterior distributions resulting from conditioning our example gp on data corrupted by increasing levels of homoskedastic noise (2.16). As the noise level increases, the observations have diminishing influence on our belief, with some extreme values eventually being partially explained away as outliers. As measurements are assumed to be inexact, the posterior mean is not compelled to interpolate perfectly through the observations, as in the exact case (Figure
+
+2.2. inference with exact and noisy observations 25
+
+_Picture omitted (465 x 110)._
+_Start of picture text:_
+observations posterior 95% credible interval,  𝑦  posterior mean posterior 95% credible interval,  𝜙  **----- End of picture text -----**  
+
+
+Figure 2.4: The posterior distribution for our example gp from Figure 2.1 conditioned on 50 observations with heteroskedastic observation noise (2.17). We show predictive credible intervals for both the latent objective function and noisy observations; the standard deviation of the observation noise increases linearly from left-to-right.
+
+2.2). Further, with increasing levels of noise, our posterior belief reflects significant residual uncertainty in the function, even in regions with multiple nearby observations.
+
+We illustrate an example of Gaussian process inference with heteroskedastic noise (2.17) in Figure 2.4, where the signal-to-noise ratio decreases smoothly from left-to-right over the domain. Although the observations provide relatively even coverage, our posterior uncertainty is minimal on the left-hand side of the domain – where the measurements provide maximal information – and increases as our observations become more noisy and less informative.
+
+We will often require the posterior predictive distribution for a noisy measurement $𝑦$ that would result from observing at a given location $𝑥$ . The posterior distribution on $𝑓$ (2.19) provides the posterior predictive distribution for the latent function value $𝜙$ = $𝑓$ ( $𝑥$ ) (2.5):
+
+heteroskedastic example and discussion
+
+posterior predictive distribution for noisy observations
+
+_Picture omitted (252 x 12)._
+but does not account for the effect of observation noise. In the case of independent additive Gaussian noise (2.16–2.17), deriving the posterior predictive distribution is trivial; we have (a.15):
+
+_Picture omitted (213 x 12)._
+This predictive distribution is illustrated in Figure 2.4; the credible intervals for noisy measurements reflect inflation of the credible intervals for the underlying function value commensurate with the scale of the noise.
+
+If the noise contains nondiagonal correlation structure, we must account for dependence between training and test errors in the predictive distribution. The easiest way to proceed is to recognize that the noisy observation process $𝑦$ = $𝜙$ + $𝜀$ , as a function of $𝑥$ , is itself a Gaussian process with mean function $𝜇$ and covariance function
+
+predictive distribution with correlated noise
+
+covariance function for noisy measurements, $𝐶$
+
+_Picture omitted (199 x 10)._
+26 gaussian processes
+
+covariance function for observation noise, *𝑁*
+
+where *𝑁* is the noise covariance: *𝑁* ( $𝑥,𝑥$[′] ) = cov[ $𝜀,𝜀$[′] | $𝑥,𝑥$[′] ]. The posterior of the observation process is then a gp with
+
+_Picture omitted (272 x 28)._
+from which we can derive predictive distributions via (2.2).
+
+## 2.3 overview of remainder of chapter
+
+- 20 In particular the claims regarding continuity and differentiability are slightly more complicated than stated below.
+
+multifidelity optimization: § 11.5, p. 263 multiobjective optimization: § 11.7, p. 269
+
+sample path continuity: § 2.5, p. 28
+
+sample path differentiability: § 2.6, p. 30
+
+derivative observations: § 2.6, p. 32
+
+existence of global maxima: § 2.7, p. 34
+
+uniqueness of global maxima: § 2.7, p. 34
+
+- inference with non-Gaussian observations and constraints: § 2.8, p. 35
+
+In the remainder of this chapter we will cover some additional, somewhat niche and/or technical aspects of Gaussian processes that see occasional use in Bayesian optimization. Modulo mathematical nuances irrelevant in practical settings, an *intuitive* (but not entirely accurate!) summary follows:20
+
+- a *joint Gaussian process* (discussed below) allows us to model *multiple* related functions simultaneously, which is critical for some scenarios such as multifidelity and multiobjective optimization;
+
+- gp sample paths are continuous if the mean function is continuous and the covariance function is continuous along the “diagonal” $𝑥$ = $𝑥$[′] ;
+
+- gp sample paths are differentiable if the mean function is differentiable and the covariance function is differentiable along the “diagonal” $𝑥$ = $𝑥$[′] ;
+
+- a function with a sufficiently smooth gp distribution shares a joint gp distribution with its gradient; among other things, this allows us to condition on (potentially noisy) derivative observations via exact inference;
+
+- gp sample paths attain a maximum when sample paths are continuous and the domain is compact;
+
+- gp sample paths attain a *unique* maximum under the additional condition that no two unique function values are perfectly correlated; and
+
+- several methods are available for approximating the posterior process of a gp conditioned on information incompatible with exact inference.
+
+If satisfied with the above summary, the reader may safely skip this material for now and move on with the next chapter. For those who wish to see the gritty details, dive in below!
+
+## 2.4 joint gaussian processes
+
+In some settings, we may wish to reason *jointly* about two-or-more related functions, such as an objective function and its gradient or an expensive objective function and a cheaper surrogate. To this end we can extend Gaussian processes to yield a joint distribution over the values assumed by multiple functions. The key to the construction is to “paste together” a collection of functions into a single function on a larger domain, then construct a standard gp on this combined function.
+
+2.4. joint gaussian processes 27
+
+## Definition
+
+To elaborate, consider a set of functions \{ $𝑓𝑖$ : $X𝑖$ → ℝ\} we wish to model.21 We define the *disjoint union* of these functions ⊔ $𝑓$ – defined on the disjoint union22 of their domains $X$ =[] $X𝑖$ – by insisting its restriction to each domain be compatible with the corresponding function:
+
+_Picture omitted (121 x 11)._
+We now can define a gp on ⊔ $𝑓$ by choosing mean and covariance functions on $X$ as desired:
+
+disjoint union of \{ $𝑓𝑖$ \}, ⊔ $𝑓$ disjoint union of \{ $X𝑖$ \}, $X$
+
+- 21 The domains need not be equal, but they often are in practice.
+
+- 22 A disjoint union represents a point $𝑥$ ∈ $X𝑖$ by the pair ( $𝑥,𝑖$ ), thereby combining the domains while retaining their identities.
+
+_Picture omitted (192 x 10)._
+We will call this construction a *joint Gaussian process* on \{ $𝑓𝑖$ \}.
+
+joint Gaussian process
+
+It is often convenient to decompose the moments of a joint gp into their restrictions on relevant subspaces. For example, consider a joint gp (2.22) on $𝑓$ : $F$ → ℝ and $𝑔$ : $G$ → ℝ. After defining
+
+_Picture omitted (260 x 27)._
+we can see that $𝑓$ and $𝑔$ in fact have marginal gp distributions:23
+
+_Picture omitted (243 x 11)._
+- 23 In fact, *any* restriction of a gp-distributed function has a gp (or multivariate normal) distribution.
+
+that are coupled by the $cross-covariance functions 𝐾𝑓𝑔$ and $𝐾𝑔𝑓$ . Given vectors x ⊂ $F$ and x[′] ⊂ $G$ , these compute the covariance between the corresponding function values $𝝓$ = $𝑓$ (x) and *𝜸* = $𝑔$ (x[′] ):
+
+_Picture omitted (229 x 27)._
+When convenient we will notate a joint gp in terms of these decomposed functions, here writing:24
+
+- 24 We also used this notation in (2.6), where the “domain” of the vector y can be taken to be some finite index set of appropriate size.
+
+_Picture omitted (223 x 31)._
+With this notation, the marginal gp property (2.23) is perfectly analogous to the marginal property of the multivariate Gaussian distribution (a.13).
+
+We can also use this construction to define a gp on a *vector-* valued function f: $X$ → ℝ $[𝑑]$ by defining a joint Gaussian process on its $𝑑$ coordinate functions \{ $𝑓𝑖$ \} : $X$ → ℝ. In this case we typically write the resulting model using the standard notation $GP$ (f; $𝜇, 𝐾$ ) *,* where the mean and covariance functions are now understood to map to ℝ $[𝑑]$ and ℝ $[𝑑] .$[×] $[𝑑]$
+
+extension to vector-valued functions
+
+## Example
+
+We can demonstrate the behavior of a joint Gaussian process by extending our running example gp on $𝑓$ : [0 *,* 30] → ℝ *.* Recall the prior on $𝑓$ has
+
+28 gaussian processes
+
+prior mean prior 95% credible interval sample
+
+_Picture omitted (465 x 49)._
+Figure 2.5: A joint Gaussian process over two functions on the shared domain $X$ = [0 *,* 30]. The marginal belief over both functions is the same as our example gp from Figure 2.1, but the cross-covariance (2.26) between the functions strongly couples their behavior. We also show a sample from the joint distribution illustrating the strong correlation induced by the joint prior.
+
+zero mean function $𝜇$ ≡ 0 and squared exponential covariance function (2.4). We augment our original function with a companion function $𝑔$ , defined on the same domain, that has exactly the same marginal gp distribution. However, we couple the distribution of $𝑓$ and $𝑔$ by defining a nontrivial cross-covariance function $𝐾𝑓𝑔$ (2.24):
+
+_Picture omitted (194 x 12)._
+where $𝐾$ is the marginal covariance function of $𝑓$ and $𝑔$ . A consequence of this choice is that for any given point $𝑥$ ∈ $X$ , the correlation of the corresponding function values $𝜙$ = $𝑓$ ( $𝑥$ ) and $𝛾$ = $𝑔$ ( $𝑥$ ) is quite strong:
+
+_Picture omitted (184 x 11)._
+We illustrate the resulting joint gp in Figure 2.5. The marginal credible intervals for $𝑓$ (and now $𝑔$ ) have not changed from our original example in Figure 2.1. However, drawing a sample of the functions from their joint distribution reveals the strong coupling encoded in the prior (2.26–2.27).
+
+## Inference for joint Gaussian processes
+
+inference from jointly Gaussian distributed observations: § 2.2, p. 18
+
+The construction in (2.22) allows us to reason about a joint Gaussian process as if it were a single gp. This allows us to condition a joint gp on observations of jointly Gaussian distributed values following the procedure outlined previously. In Figure 2.6, we condition the joint gp prior from Figure 2.5 on ten observations: five exact observations of $𝑓$ on the left-hand side of the domain and five exact observations of $𝑔$ on the right-hand side. Due to the strong correlation between the two functions, an observation of either function strongly informs our belief about the other, even in regions where there are no direct observations.
+
+## 2.5 continuity
+
+In this and the following sections we will establish some important properties of Gaussian processes determined by the properties of their
+
+2.5. continuity 29
+
+_Picture omitted (420 x 108)._
+_Start of picture text:_
+observations (direct) posterior mean  observations (other function) posterior 95% credible interval  **----- End of picture text -----**  
+
+
+_Picture omitted (420 x 68)._
+_Picture omitted (36 x 83)._
+_Start of picture text:_
+𝑝 ( 𝑓 | D )  𝑝 ( 𝑔 | D )  **----- End of picture text -----**  
+
+
+Figure 2.6: The joint posterior for our example joint gp prior in Figure 2.5 conditioned on five exact observations of each function.
+
+moments. As a gp is completely specified by its mean and covariance functions, it should not be surprising that the nature of these functions has far-reaching implications regarding properties of the function being modeled. A good familiarity with these implications can help guide model design in practice – the focus of the next two chapters.
+
+To begin, a fundamental question regarding Gaussian processes is whether sample paths are almost surely continuous, and if so how many times differentiable they may be. This is obviously an important consideration for modeling and is also critical to ensure that global optimization is a well-posed problem, as we will discuss later in this chapter. Fortunately, continuity of Gaussian processes is a well-understood property that can be guaranteed almost surely under simple conditions on the mean and covariance functions.
+
+existence of global maxima: § 2.7, p. 34
+
+Suppose $𝑓$ : $X$ → ℝ has distribution $GP$ ( $𝑓$ ; $𝜇, 𝐾$ ). Recall that $𝑓$ is continuous at $𝑥$ if $𝑓$ ( $𝑥$ ) − $𝑓$ ( $𝑥$[′] ) = $𝜙$ − $𝜙$[′] → 0 when $𝑥$[′] → $𝑥$ . Continuity is thus a limiting property of differences in function values. But under the Gaussian process assumption, this difference is Gaussian distributed (2.5, a.9)! We have
+
+_Picture omitted (145 x 11)._
+where
+
+_Picture omitted (239 x 12)._
+Now if $𝜇$ is continuous at $𝑥$ and $𝐾$ is continuous at $𝑥$ = $𝑥,$[′] then both $𝑚$ → 0 and $𝑠$[2] → 0 as $𝑥$ → $𝑥,$[′] and thus $𝜙$ − $𝜙$[′] converges in probability to 0. This intuitive condition of continuous moments is known as *continuity in mean square* at $𝑥$ ; if $𝜇$ and $𝐾$ are both continuous over the entire domain (the latter along the “diagonal” $𝑥$ = $𝑥$[′] ), then we say the entire process is continuous in mean square.
+
+continuity in mean square
+
+30 gaussian processes
+
+sample path continuity
+
+- 25 r. j. adler and j. e. taylor (2007). *Random Fields and Geometry* . Springer–Verlag. [§§ 1.3– 1.4]
+
+- 26 Hölder continuity is a generalization of Lipschitz continuity. Effectively, the covariance function must, in some sense, be “predictably” continuous.
+
+- 27 w. rudin (1976). *Principles of Mathematical Analysis* . McGraw–Hill. [theorem 2.41]
+
+- 28 Following the discussion in the next section, they in fact are *infinitely* differentiable.
+
+It turns out that continuity in mean square is not quite sufficient to guarantee that $𝑓$ is simultaneously continuous at every $𝑥$ ∈ $X$ with probability one, a property known as *sample path continuity.* However, very slightly stronger conditions on the moments of a gp are sufficient to guarantee sample path continuity.25 The following result is adequate for most settings arising in practice and may be proven as a corollary to the slightly weaker (and slightly more complicated) conditions assumed in adler and taylor’s theorem 1.4.1.
+
+Theorem. *Suppose X* ⊂ ℝ $[𝑑] is compact and 𝑓$ : $X$ → ℝ *has Gaussian process distribution GP* ( $𝑓$ ; $𝜇, 𝐾$ ) $, where 𝜇 is continuous and 𝐾 is Hölder continuous.$ 26 $Then 𝑓 is almost surely continuous on X.$
+
+The condition that $X$ ⊂ ℝ $[𝑑]$ be compact is equivalent to the domain being closed and bounded, by the Heine–Borel theorem.27 Applying this result to our example gp in Figure 2.1, we conclude that samples from the process are continuous with probability one as the domain $X$ = [0 *,* 30] is compact and the squared exponential covariance function (2.4) is Hölder continuous. Indeed, the generated samples are very smooth.28
+
+Sample path continuity can also be guaranteed on non-Euclidean domains under similar smoothness conditions.25
+
+## 2.6 differentiability
+
+We can approach the question of differentiability by again reasoning about the limiting behavior of linear transformations of function values. Suppose $𝑓$ : $X$ → ℝ with $X$ ⊂ ℝ $[𝑑]$ has distribution $GP$ ( $𝑓$ ; $𝜇, 𝐾$ ), and consider the $𝑖$ th partial derivative of $𝑓$ at x, if it exists:
+
+_Picture omitted (132 x 23)._
+sequences of normal rvs: § a.2, p. 300
+
+where e $𝑖$ is the $𝑖$ th standard basis vector. For *ℎ &gt;* 0, the value in the limit is Gaussian distributed as a linear transformation of Gaussian-distributed random variables (a.9). Assuming the corresponding partial derivative of the mean exists at x and the corresponding partial derivative with respect to each input of the covariance function exists at x = x *,*[′] then as *ℎ* → 0 the partial derivative converges in distribution to a Gaussian:
+
+_Picture omitted (206 x 26)._
+differentiability in mean square
+
+joint gp between function and gradient
+
+If this property holds for each coordinate 1 ≤ $𝑖$ ≤ $𝑑$ , then $𝑓$ is said to be *differentiable in mean square* at x.
+
+If $𝑓$ is differentiable in mean square everywhere in the domain, the process itself is called differentiable in mean square, and we have the remarkable result that the function and its gradient have a *joint* Gaussian process distribution:
+
+_Picture omitted (236 x 30)._
+2.6. differentiability 31
+
+observations posterior mean posterior 95% credible interval
+
+_Picture omitted (420 x 139)._
+_Picture omitted (11 x 84)._
+_Start of picture text:_
+𝑓  𝑑 𝑓  𝑑𝑥  **----- End of picture text -----**  
+
+
+Figure 2.7: The joint posterior of the function and its derivative for our example Gaussian process from Figure 2.2. The dashed line in the lower plot corresponds to a derivative of zero.
+
+Here by writing the gradient operator ∇ on the left-hand side of $𝐾$ we mean the result of taking the gradient with respect to its *first* input, and by writing ∇[⊤] on the right-hand side of $𝐾$ we mean taking the gradient with respect to its *second* input and transposing the result. Thus ∇ $𝐾$ : $X$ × $X$ → ℝ $[𝑑]$ maps pairs of points to column vectors:
+
+covariance between ∇ $𝑓$ (x) and $𝑓$ (x[′] ), ∇ $𝐾$
+
+_Picture omitted (217 x 24)._
+and $𝐾$ ∇[⊤] : $X$ × $X$ →(ℝ $[𝑑]$ )[∗] maps pairs of points to row vectors:
+
+transpose of covariance between $𝑓$ (x) and ∇ $𝑓$ (x[′] ), $𝐾$ ∇[⊤]
+
+_Picture omitted (107 x 13)._
+Finally, the function ∇ $𝐾$ ∇[⊤] : $X$ × $X$ → ℝ $[𝑑]$[×] $[𝑑]$ represents the result of applying both operations, mapping a pair of points to the covariance matrix between the entries of the corresponding gradients:
+
+covariance between ∇ $𝑓$ (x) and ∇ $𝑓$ (x[′] ), ∇ $𝐾$ ∇[⊤]
+
+_Picture omitted (257 x 28)._
+As the gradient of $𝑓$ has a Gaussian process marginal distribution (2.28), we can reduce the question of *continuous* differentiability to sample path continuity of the gradient process following the discussion above.
+
+Figure 2.7 shows the posterior distribution for the derivative of our example Gaussian process alongside the posterior for the function itself. We can observe a clear correspondence between the two distributions; for example, the posterior mean of the derivative vanishes at critical points of the posterior mean of the function. Notably, we have a great deal of residual uncertainty about the derivative, even at the observed locations. That is because the relatively high spacing between the existing observations limits our ability to accurately estimate the derivative
+
+continuous differentiability
+
+example and discussion
+
+32 gaussian processes
+
+_Picture omitted (444 x 167)._
+_Start of picture text:_
+observations posterior mean posterior 95% credible interval  𝑓  𝑑 𝑓  𝑑𝑥  **----- End of picture text -----**  
+
+
+Figure 2.8: The joint posterior of the derivative of our example Gaussian process after adding a new observation nearby another suggesting a large positive slope. The dashed line in the lower plot corresponds to a derivative of zero.
+
+anywhere. Adding an observation immediately next to a previous one significantly reduces the uncertainty in the derivative in that region by effectively providing a finite-difference approximation; see Figure 2.8.
+
+## Conditioning on derivative observations
+
+inference from jointly Gaussian distributed observations: § 2.2, p. 18
+
+&gt; 29 For $𝐾$ we again only need to consider the “diagonal” x = x[′] .
+
+&gt; 30 Recall the Hessian is symmetric (assuming the second partial derivatives are continuous) and thus redundant. The *half-vectorization* operator vech A maps the upper triangular part of a square, symmetric matrix A to a vector.
+
+However, we can be more direct in specifying derivatives than finite differencing. We can instead condition the joint gp (2.28) *directly* on a derivative observation, as described previously. Figure 2.9 shows the joint posterior after conditioning on an exact observation of the derivative at the left-most observation location, where the uncertainty in the derivative now vanishes entirely. This capability allows the seamless incorporation of derivative information into an objective function model. Notably, we can even condition a Gaussian process on *noisy* derivative observations as well, as we might obtain in stochastic gradient descent.
+
+We can reason about derivatives past the first recursively. For example, if $𝜇$ and $𝐾$ are *twice* differentiable,29 then the (e.g., half-vectorized30) Hessian of $𝑓$ will also have a joint gp distribution with $𝑓$ and its gradient. Defining h to be the operator mapping a function to its half-vectorized Hessian:
+
+_Picture omitted (67 x 11)._
+for a Gaussian process with suitably differentiable moments, we have
+
+_Picture omitted (202 x 12)._
+where we have used the same notational convention for the transpose. Further, $𝑓$ , ∇ $𝑓$ , and h $𝑓$ will have a joint Gaussian process distribution given by augmenting (2.28) with the marginal in (2.29) and the crosscovariance functions
+
+_Picture omitted (172 x 11)._
+2.7. existence and uniqeness of global maxima 33
+
+_Picture omitted (420 x 89)._
+_Start of picture text:_
+observations posterior mean posterior 95% credible interval  **----- End of picture text -----**  
+
+
+_Picture omitted (420 x 74)._
+_Picture omitted (11 x 84)._
+_Start of picture text:_
+𝑓  𝑑 𝑓  𝑑𝑥  **----- End of picture text -----**  
+
+
+Figure 2.9: The joint posterior of the derivative of our example Gaussian process after adding an exact observation of the derivative at the indicated location. The dashed line in the lower plot corresponds to a derivative of zero.
+
+We can continue further in this vein if needed; however, we rarely reason about derivatives of third-or-higher order in Bayesian optimization.31
+
+31 This is true in classical optimization as well!
+
+## Other linear transformations
+
+The joint gp distribution between a suitably smooth gp-distributed function and its gradient (2.28) is simply an infinite-dimensional analog of the general result that Gaussian random variables are jointly Gaussian distributed with arbitrary linear transformations (a.10), after noting that differentiation is a linear operator. We can extend this result to reason about other linear transformations of gp-distributed functions. diaconis’s original motivation for studying Bayesian numerical methods was *quadrature,* the numerical estimation of intractable integrals.32 It turns out that Gaussian processes are a rather convenient model for this task: if $𝑝$ ( $𝑓$ ) = $GP$ ( $𝑓$ ; $𝜇, 𝐾$ ) and we want to reason about the expectation
+
+- 32 p. diaconis (1988). Bayesian Numerical Analysis. In: *Statistical Decision Theory and Related Topics iv* .
+
+_Picture omitted (82 x 23)._
+then (under mild conditions) we again have a joint Gaussian process distribution over $𝑓$ and *𝑍* .33 This enables both inference about *𝑍* and conditioning on noisy observations of integrals, such as a Monte Carlo estimate of an expectation. The former is the basis for *Bayesian quadrature* , an analog of Bayesian optimization bringing Bayesian experimental design to bear on numerical integration.32[,] 34[,] 35
+
+- 33 This can be shown, for example, by considering the limiting distribution of Riemann sums.
+
+- 34 a. o’hagan (1991). Bayes–Hermite Quadrature. *Journal of Statistical Planning and Inference* 29(3):245–260.
+
+- 35 c. e. rasmussen and z. ghahramani (2002). Bayesian Monte Carlo. *neurips 2002* .
+
+## 2.7 existence and uniqeness of global maxima
+
+The primary use of gps in Bayesian optimization is to inform optimization decisions, which will be our focus for the majority of this book. Before continuing down this path, we pause to consider whether global
+
+34 gaussian processes
+
+optimization of a gp-distributed function is a well-posed problem, in particular, whether the model guarantees the existence of a global maximum at all.
+
+Consider a function $𝑓$ : $X$ → ℝ with distribution $GP$ ( $𝑓$ ; $𝜇, 𝐾$ ), and consider the location and value of its global optimum, if one exists:
+
+_Picture omitted (195 x 17)._
+mutual information and entropy search: § 7.6, p. 135
+
+As $𝑓$ is unknown, these quantities are random variables. Many Bayesian optimization algorithms operate by reasoning about the distributions of (and uncertainties in) these quantities induced by our belief on $𝑓.$
+
+There are two technical issues we must address. The first is whether we can be certain that a globally optimal value $𝑓$[∗] exists when the objective function is random. If existence is not guaranteed, then its distribution is meaningless. The second issue is one of uniqueness: assuming the objective does attain a maximal value, can we be certain the optimum is unique? In general $𝑥$[∗] is a *set* -valued random variable, and thus its distribution might have support over arbitrary subsets of the domain, rendering it complicated to reason about. However, if we could ensure the uniqueness of $𝑥$[∗] , its distribution would have support on $X$ rather than its power set, allowing more straightforward inference.
+
+Both the existence of $𝑓$[∗] and uniqueness of $𝑥$[∗] are tacitly assumed throughout the Bayesian optimization literature when building algorithms based on distributions of these quantities, but these properties are not guaranteed for arbitrary Gaussian processes. However, we can ensure these properties hold almost surely under mild conditions.
+
+## Existence of global maxima
+
+- 36 w. rudin (1976). *Principles of Mathematical Analysis* . McGraw–Hill. [theorem 4.16]
+
+sample path continuity: § 2.5, p. 28
+
+To begin, guaranteeing the existence of an optimal value is straightforward if we suppose the domain $X$ is compact, a pervasive assumption in optimization. This is no coincidence! In this case, if $𝑓$ is continuous then it achieves a global optimum by the extreme value theorem.36 Thus sample path continuity of $𝑓$ and compactness of $X$ is sufficient to ensure that $𝑓$[∗] exists almost surely. Both conditions can be readily established: sample path continuity by following our previous discussion, and compactness of the domain by standard arguments (for example, ensuring that $X$ ⊂ ℝ $[𝑑]$ be closed and bounded).
+
+## Uniqueness of global maxima
+
+- 37 A centered Gaussian process has identically zero mean function $𝜇$ ≡ 0.
+
+- 38 j. kim and d. pollard (1990). Cube Root Asymptotics. *The Annals of Statistics* 18(1):191– 219. [lemma 2.6]
+
+We now turn to the question of uniqueness of $𝑥,$[∗] which obviously only becomes a meaningful question after presupposing that $𝑓$[∗] exists. Again, this condition is easy to ensure almost surely under simple conditions on the covariance function of a Gaussian process.
+
+kim and pollard considered this issue and provided straightforward conditions under which the uniqueness of $𝑥$[∗] is guaranteed for a centered Gaussian process.37[,] 38 Namely, no two unique points in the domain can
+
+2.8. inference with non-gaussian observations and constraints 35
+
+have perfectly correlated function values, a natural condition that can be easily verified.
+
+&gt; Theorem (kim and pollard, 1990). *Let X be a compact metric space.* 39 $Suppose 𝑓$ : $X$ → ℝ *has distribution GP* ( $𝑓$ ; $𝜇$ ≡ 0 $, 𝐾$ ) $, and that 𝑓 is sample path continuous. If for all 𝑥,𝑥$[′] ∈ $X with 𝑥$ ≠ $𝑥$[′] *we have*
+
+- 39 Although unlikely to matter in practice, kim and pollard allow $X$ to be $𝜎$ -compact and show that the supremum (rather than the maximum) is unique under the same conditions.
+
+_Picture omitted (225 x 11)._
+$then 𝑓 almost surely has a unique maximum on X.$
+
+arcones provided slightly weaker conditions for uniqueness of the supremum, avoiding the requirement of sample path continuity.40
+
+- 40 m. a. arcones (1992). On the arg max of a Gaussian Process. *Statistics & Probability Letters* 15(5):373–374.
+
+*Counterexamples*
+
+Although the above conditions for ensuring existence of $𝑓$[∗] and uniqueness of $𝑥$[∗] are fairly mild, it is easy to construct counterexamples.
+
+Consider a function on the closed unit interval, which we note is compact: $𝑓$ : [0 *,* 1] → ℝ. We endow $𝑓$ with a “white noise”41 Gaussian process with
+
+- 41 It turns out this naïve model of white noise has horrible mathematical properties, but it is sufficient for this counterexample.
+
+_Picture omitted (140 x 11)._
+Now $𝑓$ almost surely does not have a maximum. Roughly, because the value of $𝑓$ at every point in the domain is independent of every other, there will almost always be a point with value exceeding any putative maximum.42 However, the conditions of sample path continuity were violated as the covariance is discontinuous at $𝑥$ = $𝑥 .$[′]
+
+We may also construct a Gaussian process that almost surely achieves a maximum that is not unique. Consider a random function $𝑓$ defined on the (compact) interval [0 *,* 4 *𝜋* ] defined by the parametric model
+
+_Picture omitted (97 x 11)._
+where $𝛼$ and $𝛽$ are independent standard normal random variables. Then $𝑓$ has a Gaussian process distribution with
+
+_Picture omitted (220 x 11)._
+Here $𝜇$ is continuous and $𝐾$ is Hölder continuous, and thus $𝑓$ is sample path continuous and almost surely achieves a global maximum. However, $𝑓$ is also periodic with period 2 *𝜋* with probability one and will thus almost surely achieve its maximum *twice.* Note that the covariance function does not satisfy the conditions outlined in the above theorem, as any input locations separated by 2 *𝜋* have perfectly correlated function values.
+
+- 42 Let $𝑄$ = ℚ ∩[0 *,* 1] = \{ $𝑞𝑖$ \} be the rationals in the domain and let $𝑓$[∗] be a putative maximum. Defining $𝜙𝑖$ = $𝑓$ ( $𝑞𝑖$ ), we must have $𝜙𝑖$ ≤ $𝑓$[∗] for every $𝑖$ ; call this event $𝐴$ . Define the event $𝐴𝑘$ by $𝑓$[∗] exceeding the
+
+- first $𝑘$ elements of $𝑄$ . From independence, $𝑘$
+
+- Pr( $𝐴𝑘$ ) =  Pr( $𝜙𝑖$ ≤ $𝑓$[∗] ) = Φ( $𝑓$[∗] ) $[𝑘] , 𝑖$ =1
+
+so Pr( $𝐴𝑘$ ) → 0 as $𝑘$ →∞. But \{ $𝐴𝑘$ \} ↗ $𝐴$ , so Pr( $𝐴$ ) = 0, and $𝑓$[∗] is almost surely not the maximum.
+
+_Picture omitted (148 x 74)._
+Our counterexample gp without a unique maximum. Every sample achieves its maximum twice.
+
+## 2.8 inference with non-gaussian observations and constraints
+
+Gaussian process inference is tractable when the observed values are jointly Gaussian distributed with the function of interest (2.6). However, this may not always hold for all relevant information we may receive.
+
+inference from jointly Gaussian distributed observations: § 2.2, p. 18
+
+36 gaussian processes
+
+_Picture omitted (474 x 148)._
+_Start of picture text:_
+observations objective mean, Gaussian noise 95% credible interval, Gaussian noise  **----- End of picture text -----**  
+
+
+Figure 2.10: Regression with observations corrupted with heavy-tailed noise. The triangular marks indicate observations lying beyond the plotted range. Shown is the posterior distribution of an objective function (along with ground truth) modeling the errors as Gaussian. The posterior is heavily affected by the outliers.
+
+_Picture omitted (160 x 104)._
+_Start of picture text:_
+𝑝 ( 𝑦 |  𝑥,𝜙 )  𝑦  𝜙  **----- End of picture text -----**  
+
+
+A Student- $𝑡$ error model (solid) with a Gaussian error model (dashed) for reference. The heavier tails of the Student- $𝑡$ model can better explain large outliers.
+
+- 43 k. l. lange et al. (1989). Robust Statistical Modeling Using the $𝑡$ Distribution. *Journal of the American Statistical Association* 84(408):881– 896.
+
+differentiability, derivative observations: § 2.6, p. 30
+
+One obvious limitation is an incompatibility with naturally nonGaussian observations. A scenario particularly relevant to optimization is heavy-tailed noise. Consider the data shown in Figure 2.10, where some observations represent extreme outliers. These errors are poorly modeled as Gaussian, and attempting to infer the underlying objective function with the additive Gaussian noise model leads to overfitting and poor predictive performance. A Student- $𝑡$ error model with *𝜈* ≈ 4 degrees of freedom provides a robust alternative:43
+
+_Picture omitted (199 x 12)._
+The heavier tails of this model can better explain large outliers; unfortunately, the non-Gaussian nature of this model also renders exact inference impossible. We will demonstrate how to overcome this impasse.
+
+Constraints on an objective function, such as bounds on given function values, can also provide valuable information during optimization, but many natural constraints cannot be reduced to observations that can be handled in closed form. Several Bayesian optimization policies impose hypothetical constraints on the objective function when designing each observation, requiring inference from intractable constraints even when the observations themselves pose no difficulties.
+
+To see how constraints might arise in optimization, consider a Gaussian process belief on a one-dimensional objective $𝑓,$ and suppose we wish to condition on $𝑓$ on having a *local* maximum at a given location $𝑥$ . Assuming the function is twice differentiable, we can invoke the second-derivative test to encode this information in two constraints:
+
+_Picture omitted (198 x 10)._
+We can condition a gp on the first of these conditions by following our previous discussion. However, *no* gp is compatible with the second
+
+2.8. inference with non-gaussian observations and constraints 37
+
+true distribution samples
+
+Figure 2.11: The probability density function of an example distribution along with 50 samples drawn independently from the distribution. In Monte Carlo approaches, the distribution is effectively approximated by a mixture of Dirac delta distributions at the sample locations.
+
+condition as $𝑓$[′′] ( $𝑥$ ) would necessarily have a Gaussian distribution with unbounded support (2.29). We need some other means to proceed.
+
+## Non-Gaussian observations: general case
+
+We can address both non-Gaussian observations and constraints with the following general case, which is flexible enough to handle a large range of information. As in our discussion on exact inference, suppose there is some vector y sharing a joint Gaussian process distribution with a function of interest $𝑓$ (2.6):
+
+_Picture omitted (148 x 31)._
+Suppose we receive some information about y in the form of information $D$ inducing a non-Gaussian posterior on y. Here, it is convenient to adopt the language of factor graphs44 and write the resulting posterior as proportional to the prior weighted by a function $𝑡$ (y) encoding the available information, which may factorize:
+
+- 44 f. r. kschischang et al. (2001). Factor Graphs and the Sum–Product Algorithm. *ieee Transactions on Information Theory* 47(2):498–519.
+
+_Picture omitted (235 x 22)._
+The functions \{ $𝑡𝑖$ \} are called *factors* or *local functions* that may comprise a likelihood augmented by any desired (hard or soft) constraints. The term “local functions” arises because each factor often depends only on a low-dimensional subspace of y, often a single entry.45
+
+The posterior on y (2.33) in turn induces a posterior on $𝑓$ :
+
+_Picture omitted (215 x 23)._
+factors, local functions, \{ $𝑡𝑖$ \}
+
+- 45 For example, when observations are conditionally independent given the corresponding function values, the likelihood factorizes into a product of one-dimensional factors (1.3):
+
+   - $𝑝$ (y | x $, 𝝓$ ) =  $𝑝$ ( $𝑦𝑖$ | $𝑥𝑖,𝜙𝑖$ ) $. 𝑖$
+
+At first glance, we may hope to resolve this posterior easily as $𝑝$ ( $𝑓$ | y) is a Gaussian process (2.9–2.10). Unfortunately, the non-Gaussian posterior on y usually renders the posterior on $𝑓$ intractable.
+
+## Monte Carlo sampling
+
+A Monte Carlo approach to approximating the $𝑓$ posterior (2.34) begins by drawing samples from the y posterior (2.33):
+
+_Picture omitted (78 x 11)._
+38 gaussian processes
+
+_Picture omitted (465 x 148)._
+_Start of picture text:_
+observations objective posterior mean posterior 95% credible interval  **----- End of picture text -----**  
+
+
+Figure 2.12: Regression with observations corrupted with heavy-tailed noise. The triangular marks indicate observations lying beyond the plotted range. Shown is the posterior distribution of an objective function (along with ground truth) modeling the errors as Student- $𝑡$ distributed with *𝜈* = 4 degrees of freedom. The posterior was approximated from 100 000 Monte Carlo samples. Comparing with the additive Gaussian noise model from Figure 2.10, this model effectively ignores the outliers and the fit is excellent.
+
+&gt; 46 *Handbook of Markov Chain Monte Carlo* (2011). Chapman & Hall.
+
+&gt; 47 i. murray et al. (2010). Elliptical Slice Sampling. *aistats 2010* .
+
+We may generate these by appealing to one of numerous Markov chain Monte Carlo (mcmc) routines.46 One natural choice would be *elliptical slice sampling,* 47 which is specifically tailored for latent Gaussian models of this form. Samples from a one-dimensional toy example distribution are shown in Figure 2.11.
+
+Given posterior samples of y, we may then approximate (2.34) via the standard Monte Carlo estimator
+
+_Picture omitted (260 x 30)._
+This is a mixture of Gaussian processes, each of the form in (2.9–2.10). The posterior mean functions depend on the corresponding y samples, whereas the posterior covariance functions are identical as there is no dependence on the observed values. In this approximation, the marginal belief about any function value is then a mixture of univariate Gaussians:
+
+_Picture omitted (277 x 41)._
+Although slightly more complex than the Gaussian marginals of a Gaussian process, this is often convenient enough for most needs.
+
+example: Student- $𝑡$ observation model
+
+A Monte Carlo approximation to the posterior for the heavy-tailed dataset from Figure 2.10 is shown in Figure 2.12. The observations were modeled as corrupted by Student- $𝑡$ errors with *𝜈* = 4 degrees of freedom. The posterior was approximated using a truly excessive number of samples (100 000, with a burn-in of 10 000) from the y posterior drawn using elliptical slice sampling.47 The outliers in the data are ignored and the predictive performance is excellent.
+
+2.8. inference with non-gaussian observations and constraints 39
+
+## Gaussian approximate inference
+
+An alternative to sampling is *approximate inference,* where we make a parametric approximation to the y posterior that yields a tractable posterior on $𝑓.$ In particular, if the posterior (2.33) were actually *normal,* it would induce a Gaussian process posterior on $𝑓$ . This insight is the basis for most approximation schemes.
+
+In this vein, we proceed by first – somehow – approximating the true posterior over y with a multivariate Gaussian distribution:
+
+_Picture omitted (215 x 12)._
+We are free to design this approximation as we see fit. There are several general-purpose approaches available, distinguished by how they approach maximizing the fidelity of fitting the true posterior (2.33). These include the Laplace approximation, Gaussian expectation propagation, and variational Bayesian inference. The first two of these methods are covered in Appendix b, and nickisch and rasmussen provide an extensive survey of these and other approaches in the context of Gaussian process binary classification.48
+
+Regardless of the details of the approximation scheme, the high-level result is the same – the normal approximation (2.37) in turn induces an approximate Gaussian process posterior on $𝑓.$ To demonstrate this, we consider the posterior on $𝑓$ that would arise from a direct observation of y (2.9–2.10) and integrate against the approximate posterior (2.37):
+
+Laplace approximation: § b.1, p. 301 Gaussian expectation propagation: § b.2 p. 302
+
+- 48 h. nickisch and c. e. rasmussen (2008). Appproximations for Binary Gaussian Process Classification. *Journal of Machine Learning Research* 9(Oct):2035–2078.
+
+_Picture omitted (262 x 23)._
+where
+
+_Picture omitted (258 x 29)._
+For most approximation schemes, the posterior covariance on $𝑓$ simplifies to a nicer, more familiar form. Most approximations to the y posterior (2.37) yield an approximate posterior covariance of the form
+
+_Picture omitted (191 x 12)._
+where N is positive definite. Although this might appear mysterious, it is actually a natural form: it is the posterior covariance that would result from observing y corrupted by additive Gaussian noise with covariance N (2.19), except we are now free to design the noise covariance to maximize the fit. For approximations of this form (2.40), the approximate posterior covariance function on $𝑓$ simplifies to the more familiar
+
+_Picture omitted (236 x 12)._
+To demonstrate the power of approximate inference, we return to our motivating scenario of conditioning a one-dimensional process on having a local maximum at an identified point $𝑥$ , which we can achieve by
+
+example: conditioning on a local optimum
+
+40 gaussian processes
+
+posterior mean posterior 95% credible interval posterior sample
+
+_Picture omitted (388 x 120)._
+_Start of picture text:_
+𝑥 𝑥 𝑥  𝑓 [′] ( 𝑥 ) = 0 𝑓 [′′] ( 𝑥 ) &lt;  0  **----- End of picture text -----**  
+
+
+Figure 2.13: Approximately conditioning a Gaussian process to have a local maximum at the marked point $𝑥$ . We show each stage of the conditioning process with a sample drawn from the corresponding posterior. We begin with the unconstrained process (left), which we condition on the first derivative being zero at $𝑥$ using exact inference (middle). Finally we use Gaussian expectation propagation to approximately condition on the second derivative being negative at $𝑥$ .
+
+derivative observations: § 2.6, p. 32
+
+conditioning the first derivative to be zero and constraining the second derivative to be negative at $𝑥$ (2.32). We illustrate an approximation to the resulting posterior step-by-step in Figure 2.13, beginning with the example Gaussian process in the left-most panel. We first condition the process on the first derivative observation $𝑓$[′] ( $𝑥$ ) = 0 using *exact* inference; the result is shown in the middle panel. Both the updated posterior mean and the sample reflect this information; however, the sample displays a local *minimum* at $𝑥$ , as the second-derivative constraint has not yet been addressed.
+
+To incorporate the second-derivative constraint, we begin with this updated gp and consider the second derivative *ℎ* = $𝑓$[′′] ( $𝑥$ ), which is Gaussian distributed prior to the constraint (2.29):
+
+_Picture omitted (79 x 12)._
+The negativity constraint induces a posterior on *ℎ* incorporating the factor [ *ℎ &lt;* 0] (2.33); see Figure 2.14:
+
+_Picture omitted (100 x 10)._
+The result is a truncated normal posterior on *ℎ* . We may use Gaussian expectation propagation, which is especially convenient for handling bound constraints of this form, to produce a Gaussian approximation:
+
+_Picture omitted (141 x 12)._
+&gt; 49 p. mccullagh and j. a. nelder (1989). *Generalized Linear Models* . Chapman & Hall.
+
+Incorporating the updated belief on *ℎ* into the Gaussian process (2.39) yields the approximate posterior in the right-most panel of Figure 2.13. Although there is still some residual probability that the second derivative is positive at $𝑥$ in the approximate posterior (approximately 8%; see Figure 2.14), the belief reflects the desired information reasonably faithfully.
+
+2.9. summary of major ideas 41
+
+_Picture omitted (465 x 110)._
+_Start of picture text:_
+prior,  𝑝 ( ℎ ) true posterior,  𝑝 ( ℎ | D ) ∝ 𝑝 ( ℎ ) [ ℎ &lt;  0]  constraint factor, [ ℎ &lt;  0] Gaussian ep approximation  0 0  **----- End of picture text -----**  
+
+
+Figure 2.14: A demonstration of Gaussian expectation propagation. On the left we have a Gaussian belief on the second derivative, $𝑝$ ( *ℎ* ). We wish to constrain this value to be negative, introducing a step-function factor encoding the constraint, [ *ℎ &lt;* 0]. The resulting distribution is non-Gaussian (right), but we can approximate it with a Gaussian, which induces an updated gp posterior on the function approximately incorporating the constraint.
+
+Going beyond this example, we may use the approach outlined above to realize a general framework for Bayesian nonlinear regression by combining a gp prior on a latent function with an observation model appropriate for the task at hand, then approximating the posterior as desired. The convenience and modeling flexibility offered by Gaussian processes can easily justify any extra effort required for approximating the posterior. This can be seen as a nonlinear extension of the well-known family of *generalized linear models.* 49
+
+This approach is quite popular and has been realized countless times. Notable examples include binary classification using a logistic or probit observation model,50 modeling point processes as a nonhomogeneous Poisson process with unknown intensity,51[,] 52 and robust regression with heavy-tailed additive noise such as Laplace53 or Student- $𝑡$ 54[,] 55 distributed errors. With regard to the latter and our previous heavy-tailed noise example, a Laplace approximation to the posterior for the data in Figures 2.10–2.12 with the Student- $𝑡$ observation model produces an approximate posterior in excellent agreement with the Monte Carlo approximation in Figure 2.12; see Figure 2.15. The cost of approximate inference in this case was dramatically (several orders of magnitude) cheaper than Monte Carlo sampling.
+
+## 2.9 summary of major ideas
+
+Gaussian processes have been studied – in one form or another – for over 100 years.56 Although we have covered a lot of ground in this chapter, we have only scratched the surface of an expansive body of literature. A good entry point to that literature is rasmussen and williams’s monograph, which focuses on machine learning applications of Gaussian processes but also covers their theoretical underpinnings and properties in depth.57 A good companion to this work is the book of adler and taylor, which takes a deep dive into the properties and geometry of sample paths, including statistical properties of their maxima.58
+
+- 50 h. nickisch and c. e. rasmussen (2008). Appproximations for Binary Gaussian Process Classification. *Journal of Machine Learning Research* 9(Oct):2035–2078.
+
+- 51 j. møller et al. (1998). Log Gaussian Cox Processes. *Scandinavian Journal of Statistics* 25(3): 451–482.
+
+- 52 r. p. adams et al. (2009). Tractable Nonparametric Bayesian Inference in Poisson Processes with Gaussian Process Intensities. *icml 2009* .
+
+- 53 m. kuss (2006). Gaussian Process Models for Robust Regression, Classification, and Reinforcement Learning. Ph.D. thesis. Technische Universität Darmstadt.[§ 5.4]
+
+- 54 r. m. neal (1997). *Monte Carlo Implementation of Gaussian Process Models for Bayesian Regression and Classification* . Technical report (9702). Department of Statistics, University of Toronto.
+
+- 55 p. jylänki et al. (2011). Robust Gaussian Process Regression with a Student- $𝑡$ Likelihood. *Journal of Machine Learning Research* 12(99): 3227–3257.
+
+- 56 diaconis identified an early application of gps by poincaré for nonlinear regression:
+
+   - p. diaconis (1988). Bayesian Numerical Analysis. In: *Statistical Decision Theory and Related Topics iv* .
+
+   - h. poincaré (1912). *Calcul des probabilités* . Gauthier–Villars.
+
+- 57 c. e. rasmussen and c. k. i. williams (2006). *Gaussian Processes for Machine Learning* . mit Press.
+
+- 58 r. j. adler and j. e. taylor (2007). *Random Fields and Geometry* . Springer–Verlag.
+
+42 gaussian processes
+
+_Picture omitted (465 x 148)._
+_Start of picture text:_
+observations objective posterior mean posterior 95% credible interval  **----- End of picture text -----**  
+
+
+Figure 2.15: A Laplace approximation to the posterior from Figure 2.12.
+
+Fortunately, the basic definitions and properties covered in § 2.1 and exact inference procedure covered in § 2.2 already provide a sufficient foundation for the majority of practical applications of Bayesian optimization. This material also provides sufficient background knowledge for the majority of the remainder of the book. However, we wish to underscore the major results from this chapter at a high level.
+
+- Gaussian processes extend the multivariate normal distribution to model functions on infinite domains. As in the finite-dimensional case, Gaussian processes are specified by their first two moments – a mean function and a positive-definite covariance function – which endow any finite set of function values with a multivariate normal distribution (2.2–2.3).
+
+- Conditioning a Gaussian process on function observations that are either exact or corrupted by additive Gaussian noise yields a Gaussian process posterior with updated moments reflecting the assumptions in the prior and the information in the observations (2.9–2.10).
+
+inference from arbitrary joint Gaussian observations: § 2.2, p. 22
+
+interpretation of posterior moments: § 2.2, p. 21
+
+joint Gaussian processes: § 2.4, p. 26
+
+Extensions and Related Settings: Chapter 11, p. 245 continuity: § 2.5, p. 28 differentiability: § 2.6, p. 30
+
+- In fact, we may condition a Gaussian process on the observation of *any* observations sharing a joint Gaussian distribution with the function of interest.
+
+- In the case of exact inference, the posterior moments of a Gaussian process can be rewritten in terms of correlations among function values and $𝑧$ -scores of the observed values in a manner that may be more intuitive than the standard formulas.
+
+- We may extend Gaussian processes to jointly model multiple correlated functions via careful bookkeeping, a construction known as a *joint Gaussian process.* Joint gps are widely used in optimization settings involving multiple objectives and/or cheaper surrogates for an expensive objective.
+
+- Continuity and differentiability of Gaussian process sample paths can be guaranteed under mild assumptions on the mean and covariance functions. When these functions are sufficiently differentiable, a gpdistributed function shares a joint gp distribution with its gradient (2.28).
+
+2.9. summary of major ideas 43
+
+This joint distribution allows us to condition a Gaussian process on (potentially noisy) derivative observations.
+
+- The existence and uniqueness of global maxima for Gaussian process sample paths can be guaranteed under mild assumptions on the mean and covariance functions. Establishing these properties ensures that the location $𝑥$[∗] and value $𝑓$[∗] of the global maximum are well-founded random variables, which will be critical for some optimization methods introduced later in the book.59
+
+- Inference from non-Gaussian observations and constraints is possible via Monte Carlo sampling or Gaussian approximate inference.
+
+derivative observations: § 2.6, p. 32
+
+existence and uniqueness of global maxima: § 2.7, p. 33
+
+- 59 In particular, policies grounded in information theory under the umbrella of “entropy search.” See § 7.6, p. 135 for more.
+
+inference with non-Gaussian observations and constraints: § 2.8, p. 35
+
+Looking forward, the focus of this chapter has been on theoretical rather than practical properties of Gaussian processes. A huge outstanding question is how to actually *design* a Gaussian process to model a given system. This will be our focus for the next two chapters. In the next chapter, we will explore model *construction,* and in the following chapter we will consider model *assessment* in light of available data.
+
+Finally, we have not yet discussed any computational issues inherent to Gaussian process inference, including, most importantly, how the cost of computing the posterior grows with respect to the number of observations. We will discuss implementation details and scaling in a dedicated chapter later in the book.
+
+implementation and scaling of Gaussian process inference: § 9.1, p. 201
